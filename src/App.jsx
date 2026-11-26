@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { cloneElement, useEffect, useId, useRef, useState } from "react";
 import {
   Activity, ArrowLeft, ArrowRight, Award, CalendarDays, Check, ChevronRight,
   CircleUserRound, Clock3, Cloud, CloudOff, Droplets, Flame, Footprints,
@@ -11,10 +11,11 @@ import { bmiValue, weightGoalProgress } from "./lib/metrics.js";
 import SurveyFlow from "./SurveyFlow.jsx";
 import SlimsyHome from "./SlimsyHome.jsx";
 import {WaterView,WeightView,PlanView,ResultsView} from "./WellnessPages.jsx";
+import {ActivityView,MilestoneModal,useReminders,RemindersCard} from "./ExtraPages.jsx";
 import "./public-landing.css";
 import {
-  blankDay, createEmptyData, earnedBadges, entryCount, levelInfo, loadLocal,
-  localDay, normalizeData, rangeDates, safeMl, safeNumber, saveLocal, toClock, weeklyWaterMl
+  blankDay, changeWeightUnit, createEmptyData, earnedBadges, levelInfo, loadLocal,
+  localDay, normalizeData, rangeDates, safeMl, safeNumber, saveLocal, toClock
 } from "./lib/tracker.js";
 
 const NAV = [
@@ -47,8 +48,9 @@ function Tag({ children, gold, light }) {
   return <span className={"pill" + (gold ? " gold" : "") + (light ? " light" : "")}>{children}</span>;
 }
 function FormField({ label, value, onChange, type = "text", placeholder, min, max, step, children }) {
-  return <div className="field"><label>{label}</label>{children ||
-    <input className="input" type={type} value={value ?? ""} min={min} max={max} step={step}
+  const id = useId();
+  return <div className="field"><label htmlFor={id}>{label}</label>{children ? cloneElement(children, { id }) :
+    <input id={id} className="input" type={type} value={value ?? ""} min={min} max={max} step={step}
       placeholder={placeholder} onChange={e => onChange(e.target.value)}/>}</div>;
 }
 function SelectField({ label, value, onChange, options }) {
@@ -158,43 +160,6 @@ function ResetPasswordScreen({ onDone }) {
   </main>;
 }
 
-function Onboard({ original, onSave }) {
-  const [p, setP] = useState({...original});
-  const change = (key,value) => setP(x=>({...x,[key]:value}));
-  const submit = e => {
-    e.preventDefault();
-    if(!p.name.trim()) return;
-    onSave({...p,name:p.name.trim()});
-  };
-  return <main className="onboard">
-    <Tag><Leaf size={13}/> Let's start</Tag>
-    <h1 style={{marginTop:20}}>Create your healthy routine</h1>
-    <p className="sub">Your details help set up manual goals. You can edit everything later.</p>
-    <form onSubmit={submit}>
-      <Card>
-        <FormField label="Your name *" value={p.name} onChange={v=>change("name",v)} placeholder="Enter your name"/>
-        <div className="grid2">
-          <FormField label="Age (optional)" type="number" value={p.age} onChange={v=>change("age",v)} min={1} max={120}/>
-          <SelectField label="Weight unit" value={p.weightUnit} onChange={v=>change("weightUnit",v)} options={["kg","lbs"]}/>
-        </div>
-        <SelectField label="Diet preference" value={p.diet} onChange={v=>change("diet",v)} options={["Any","Vegetarian","Vegan","Non-vegetarian"]}/>
-        <SelectField label="Activity" value={p.activity} onChange={v=>change("activity",v)}
-          options={["Sedentary","Lightly active","Moderately active","Very active"]}/>
-        <SelectField label="Fasting preference" value={String(p.fastingHours)} onChange={v=>change("fastingHours",Number(v))}
-          options={["12","14","16"]}/>
-        <div className="grid2">
-          <FormField label="Water goal (ml)" type="number" value={p.waterGoalMl}
-            onChange={v=>change("waterGoalMl",safeMl(v))} min={250} max={12000} step={250}/>
-          <FormField label="Sleep goal (hours)" type="number" value={p.sleepGoal}
-            onChange={v=>change("sleepGoal",Number(v))} min={1} max={16} step={0.5}/>
-        </div>
-        <Button type="submit" block disabled={!p.name.trim()}>Open my free tracker <ArrowRight size={17}/></Button>
-      </Card>
-    </form>
-    <div className="notice">Fasting is not appropriate for everyone. If pregnant, under 18, or managing diabetes, an eating disorder or medication affecting meals, consult your clinician before fasting.</div>
-  </main>;
-}
-
 function DatePicker({ date, onPick }) {
   const days = rangeDates(localDay(),7);
   return <div className="picker" aria-label="Choose day">
@@ -204,62 +169,6 @@ function DatePicker({ date, onPick }) {
     </button>)}
   </div>;
 }
-function HomeScreen({ data, today, setTab, addWater, showPlan }) {
-  const p = data.profile;
-  const d = data.days[today] || blankDay();
-  const info = levelInfo(data);
-  const water = d.waterMl || 0;
-  const meals = d.meals || [];
-  const totalCalories=meals.reduce((s,x)=>s+(Number(x.calories)||0),0);
-  const movement=(d.activity||[]).reduce((s,x)=>s+(Number(x.minutes)||0),0);
-  const tiles=[
-    { icon:"💧", label:"Water", value:(water/1000).toFixed(2)+" L", action:()=>setTab("track") },
-    { icon:"🥗", label:"Food", value:totalCalories+" kcal", action:()=>setTab("track") },
-    { icon:"🌙", label:"Sleep", value:formatHours(d.sleepHours), action:()=>setTab("track") },
-    { icon:"🚶", label:"Activity", value:movement+" min", action:()=>setTab("track") }
-  ];
-  return <>
-    <header className="hero">
-      <div className="logorow"><div className="logo"><Leaf size={23}/></div>
-        <div><strong>Slimsyfit FreeApp</strong><span className="logo-caption">Build habits, not pressure</span></div>
-        <Tag light><ShieldCheck size={12}/> FREE</Tag>
-      </div>
-      <h1>{pageGreeting()},<br/>{p.name.split(" ")[0]}! 👋</h1>
-      <p>Small steps are adding up. Keep going at your own pace.</p>
-      <div className="statstripe">
-        <div><b>{info.count}</b><span>Weight logs</span></div>
-        <div><b>{info.name}</b><span>Current level</span></div>
-        <div><b>{earnedBadges(data).length}</b><span>Badges earned</span></div>
-      </div>
-    </header>
-    <SectionTitle note={dateShort(today)}>Today's overview</SectionTitle>
-    <div className="content">
-      <div className="grid2">
-        {tiles.map(t=><button type="button" onClick={t.action} key={t.label}
-          className="card metric" style={{textAlign:"left",border:0,cursor:"pointer"}}>
-          <span className="emoji">{t.icon}</span><div><b>{t.value}</b><span>{t.label}</span></div>
-        </button>)}
-      </div>
-      <Card>
-        <div className="row"><div><h3 style={{marginBottom:3}}>Water goal</h3><span className="muted">{water.toLocaleString()} / {p.waterGoalMl.toLocaleString()} ml</span></div><Droplets color="#2f9972" size={23}/></div>
-        <div style={{margin:"13px 0"}}><ProgressLine value={water} total={p.waterGoalMl}/></div>
-        <Button small ghost onClick={addWater}><Plus size={14}/> Add 250 ml</Button>
-      </Card>
-      <Card>
-        <div className="row"><div><h3>Progress level</h3><Tag><Award size={13}/>{info.name}</Tag></div>
-          <span className="number" style={{fontSize:24}}>{info.nextAt||"✓"}</span></div>
-        <p style={{margin:"12px 0"}}>{info.nextAt ? "Record weight on "+(info.nextAt-info.count)+" more distinct days to unlock the next level." : "Lifestyle unlocked! Keep showing up for yourself."}</p>
-        <ProgressLine value={info.progress} total={100}/>
-      </Card>
-      <Card>
-        <h3>Your plan, your choice</h3><p>Simple meal ideas, a personal fasting goal and practical habits. No AI recommendations or subscription required.</p>
-        <Button outline block onClick={showPlan}><CalendarDays size={16}/> View my 4-week plan <ChevronRight size={16}/></Button>
-      </Card>
-      <div className="notice">Wellness information only. Listen to your body's needs; fasting and calorie restriction are not recommended for everyone.</div>
-    </div>
-  </>;
-}
-
 function TrackScreen({ data, date, onDate, updateDay }) {
   const d=data.days[date]||blankDay(), p=data.profile;
   const [food,setFood]=useState({type:"Breakfast",name:"",calories:"",carbs:"",fat:"",protein:""});
@@ -424,7 +333,7 @@ function FastingScreen({ data, now, onStart, onFinish, onHoursChange }) {
       <Card>
         <div className="row"><h3>Choose a routine</h3><Tag>{hours}:{24-hours}</Tag></div>
         <div className="choice">
-          {[12,14,16].map(h=><button key={h} className={h===hours?"active":""}
+          {[12,14,16,18].map(h=><button key={h} className={h===hours?"active":""}
             disabled={Boolean(start)} onClick={()=>onHoursChange(h)}>{h}:{24-h} {h===12?"Beginner":""}</button>)}
         </div>
         <div className="timer">
@@ -454,141 +363,14 @@ function FastingScreen({ data, now, onStart, onFinish, onHoursChange }) {
   </>;
 }
 
-function PlanScreen({data,onBack}) {
-  const p=data.profile;
-  const ideas=MEAL_IDEAS[p.diet]||MEAL_IDEAS.Any;
-  const weeks=[
-    {title:"Begin with awareness",focus:"Notice daily water, meal and sleep patterns",number:1},
-    {title:"Build a rhythm",focus:"Aim for a realistic repeatable routine",number:2},
-    {title:"Strengthen consistency",focus:"Review activity and check-in trends",number:3},
-    {title:"Make it a lifestyle",focus:"Celebrate progress and adjust goals",number:4}
-  ];
-  return <>
-    <BackHead title="Your Free Plan" onBack={onBack}/>
-    <div className="content">
-      <div className="notice">This plan is a general wellness checklist, not a medically personalized diet or fasting prescription.</div>
-      <Card><h3>My routine</h3>
-        <div className="row"><span className="sub">Fasting (optional)</span><Tag>{p.fastingHours}:{24-p.fastingHours}</Tag></div>
-        <div className="dividerline"/>
-        <div className="row"><span className="sub">Water goal</span><strong>{p.waterGoalMl} ml</strong></div>
-        <div className="dividerline"/>
-        <div className="row"><span className="sub">Sleep goal</span><strong>{p.sleepGoal} hours</strong></div>
-        <div className="dividerline"/>
-        <div className="row"><span className="sub">Activity goal</span><strong>{p.activityGoal} minutes</strong></div>
-      </Card>
-      <Card><h3>Easy meal ideas · {p.diet}</h3>
-        <img src="/assets/slimsyfit/images/nutrition/front-plan-bowl.png" alt="Balanced nutritious bowl"
-          style={{width:"100%",height:160,objectFit:"cover",borderRadius:15,margin:"2px 0 12px"}}/>
-        {ideas.map((m,i)=>{
-          const selectedDiet=p.diet==="Vegan"?"vegan":p.diet==="Vegetarian"?"vegetarian":"non-vegetarian";
-          const meal=["breakfast","lunch","dinner"][i];
-          return <div key={m} className="entry">
-            <img src={"/assets/slimsyfit/images/nutrition/diet/"+selectedDiet+"-"+meal+".png"} alt=""
-              style={{width:53,height:53,objectFit:"cover",borderRadius:13}}/>
-            <div className="entrymain"><b>{["Breakfast","Lunch","Dinner"][i]}</b><small>{m}</small></div>
-          </div>;
-        })}
-        <p className="mini-help">Examples only. Log real foods and quantities in the Track tab.</p>
-      </Card>
-      {weeks.map(w=><Card key={w.number}><div className="row start"><div className="circleicon">0{w.number}</div><div><h3 style={{marginBottom:3}}>{w.title}</h3><span className="sub">{w.focus}</span></div></div></Card>)}
-    </div>
-  </>;
-}
-
-function ProgressScreen({ data, today }) {
-  const p=data.profile,info=levelInfo(data),badges=earnedBadges(data);
-  const water=weeklyWaterMl(data,today);
-  const weights=Object.entries(data.days).filter(([,d])=>d.weight!=null)
-    .sort((a,b)=>b[0].localeCompare(a[0])).slice(0,12);
-  const sleep=Object.entries(data.days).filter(([,d])=>d.sleepHours!=null)
-    .sort((a,b)=>b[0].localeCompare(a[0])).slice(0,7);
-  const avg=water.reduce((s,x)=>s+x.ml,0)/7;
-  const latestWeight=weights[0]?.[1]?.weight??null;
-  const bmi=bmiValue(p.height||p.heightCm,latestWeight,p.weightUnit);
-  const goalProgress=weightGoalProgress(latestWeight,p.currentWeight,p.targetWeight,p.weightUnit);
-  const trend=weights.slice(0,8).reverse();
-  const numericWeights=trend.map(([,d])=>Number(d.weight)).filter(Number.isFinite);
-  const rangeMin=numericWeights.length?Math.min(...numericWeights):0;
-  const rangeMax=numericWeights.length?Math.max(...numericWeights):0;
-  return <>
-    <SectionTitle note="Based on real entries">Your progress</SectionTitle>
-    <div className="content">
-      <div className="grid2">
-        <Card className="metric"><span className="emoji">📆</span><div><b>{info.count}</b><span>Weight logs</span></div></Card>
-        <Card className="metric"><span className="emoji">🏅</span><div><b>{badges.length}</b><span>Badges earned</span></div></Card>
-      </div>
-      <Card>
-        <div className="row"><div><h3>My current level</h3><Tag><Award size={13}/>{info.name}</Tag></div><span className="number">{info.count} days</span></div>
-        <p style={{marginTop:13}}>{info.nextAt?"Next level unlocks at "+info.nextAt+" distinct weight entries.":"You've reached Lifestyle!"}</p>
-        <ProgressLine value={info.progress} total={100}/>
-        <div className="mini-help" style={{marginTop:9}}>Levels unlock at 7 and 30 weight check-ins. Locked levels remain hidden until achieved.</div>
-      </Card>
-      <Card>
-        <div className="row"><h3>Water · last 7 days</h3><Tag>Avg {(avg/1000).toFixed(2)} L</Tag></div>
-        <div className="chart">
-          {water.map(x=><div className="barcol" key={x.date}>
-            <div className="bar" title={dateShort(x.date)+": "+x.ml+" ml"}
-              style={{height:Math.max(3,Math.round(x.ml/Math.max(p.waterGoalMl,250)*80))+"px"}}/>
-            <small>{new Date(x.date+"T12:00:00").toLocaleDateString("en-US",{weekday:"short"})}</small>
-          </div>)}
-        </div>
-        <p className="mini-help" style={{marginTop:12}}>Water chart uses only recorded daily amounts.</p>
-      </Card>
-      <Card>
-        <div className="row"><h3>Weight, BMI & goal</h3><Tag>Recorded data only</Tag></div>
-        <div className="grid2" style={{marginBottom:16}}>
-          <div><span className="muted">Latest weigh-in</span><div className="number" style={{fontSize:22}}>{formatWeight(latestWeight,p.weightUnit)}</div></div>
-          <div><span className="muted">BMI · screening metric</span><div className="number" style={{fontSize:22}}>{bmi??"—"}</div></div>
-        </div>
-        {goalProgress!==null&&<div>
-          <div className="row"><span className="sub">Weight-goal progress</span><strong>{goalProgress}%</strong></div>
-          <div style={{margin:"10px 0 14px"}}><ProgressLine value={goalProgress} total={100}/></div>
-        </div>}
-        {trend.length>=2&&<div className="chart" aria-label="Weight trend from actual measurements">
-          {trend.map(([date,d])=><div className="barcol" key={date}>
-            <div className="bar" title={date+": "+d.weight+" "+p.weightUnit}
-              style={{height:(18+60*(Number(d.weight)-rangeMin)/(Math.max(1,rangeMax-rangeMin)))+"px"}}/>
-            <small>{date.slice(5)}</small>
-          </div>)}
-        </div>}
-        <p className="mini-help" style={{marginTop:10}}>BMI is an approximate screening measure, not a diagnosis. It appears only when height and an actual weigh-in are available. Weight predictions are intentionally omitted.</p>
-      </Card>
-      <Card>
-        <h3>Weight history</h3>
-        {weights.length ? weights.map(([date,d])=><div className="entry" key={date}>
-          <div className="circleicon"><Scale size={17}/></div>
-          <div className="entrymain"><b>{dateShort(date)}</b></div><strong>{formatWeight(d.weight,p.weightUnit)}</strong>
-        </div>) : <div className="empty">Log your weight to see a trend here.</div>}
-      </Card>
-      <Card>
-        <h3>Sleep history</h3>
-        {sleep.length ? sleep.map(([date,d])=><div key={date} className="entry">
-          <div className="circleicon"><Moon size={17}/></div><div className="entrymain"><b>{dateShort(date)}</b></div><strong>{formatHours(d.sleepHours)}</strong>
-        </div>) : <div className="empty">Sleep entries will appear here.</div>}
-      </Card>
-      <Card>
-        <h3>Achievements</h3>
-        {badges.length ? badges.slice().reverse().map(b=><div className="badge-row" key={b.count}>
-          <div className="badge-emblem" style={{padding:0,overflow:"hidden"}}>
-            <img alt={b.title} loading="lazy" src={"/assets/slimsyfit/milestones/milestone-"+b.count+(b.count===10?".png":".jpg")}
-              style={{width:"100%",height:"100%",objectFit:"cover"}}/>
-          </div>
-          <div><strong style={{fontSize:13}}>{b.title}</strong><div className="muted">{b.count} logged days</div></div>
-          <Check size={16} style={{marginLeft:"auto",color:"#1c8e68"}}/>
-        </div>) : <div className="empty">Your first badge unlocks after 10 real weight entries.</div>}
-        <p className="mini-help">Badges unlock for 10, 20, 30 ... 100 recorded weight entries.</p>
-      </Card>
-    </div>
-  </>;
-}
-
-function MeScreen({ data, identity, session, onProfile, onSignOut, onReset, onDeleteAccount, onConnect, onEditSurvey, syncState }) {
+function MeScreen({ data, identity, session, onProfile, onUnitChange, onReminders, onSignOut, onReset, onDeleteAccount, onConnect, onEditSurvey, syncState }) {
   const p=data.profile;
   const [name,setName]=useState(p.name);
   const [diet,setDiet]=useState(p.diet);
   const [water,setWater]=useState(p.waterGoalMl);
   const [sleep,setSleep]=useState(p.sleepGoal);
   const [activity,setActivity]=useState(p.activityGoal);
+  const [steps,setSteps]=useState(p.stepGoal||8000);
   const [unit,setUnit]=useState(p.weightUnit);
   const [exactAge,setExactAge]=useState(p.exactAge||"");
   const [targetWeight,setTargetWeight]=useState(p.targetWeight||"");
@@ -597,7 +379,13 @@ function MeScreen({ data, identity, session, onProfile, onSignOut, onReset, onDe
     if(!name.trim())return;
     const validatedAge=exactAge===""?"":(Number.isInteger(Number(exactAge))&&Number(exactAge)>=18&&Number(exactAge)<=110?Number(exactAge):null);
     if(validatedAge===null){setMessage("Enter a valid exact age (18–110), or leave it blank.");return}
-    onProfile({...p,name:name.trim(),diet,waterGoalMl:safeMl(water),sleepGoal:Number(sleep),activityGoal:Number(activity),weightUnit:unit,exactAge:validatedAge,targetWeight});
+    const sleepGoal=Number(sleep),activityGoal=Number(activity),stepGoal=Number(steps),waterGoalMl=safeMl(water);
+    if(!(sleepGoal>=1&&sleepGoal<=16)){setMessage("Sleep goal must be between 1 and 16 hours.");return}
+    if(!(activityGoal>=1&&activityGoal<=1440)){setMessage("Activity goal must be between 1 and 1,440 minutes.");return}
+    if(!(stepGoal>=100&&stepGoal<=100000)){setMessage("Step goal must be between 100 and 100,000.");return}
+    if(waterGoalMl<250){setMessage("Water goal must be at least 250 ml.");return}
+    onProfile({...p,name:name.trim(),diet,waterGoalMl,sleepGoal,activityGoal,stepGoal,exactAge:validatedAge,targetWeight});
+    if(unit!==p.weightUnit)onUnitChange(unit);
     setMessage("Profile and goals saved.");setTimeout(()=>setMessage(""),3000);
   };
   const exportData=()=>{
@@ -625,10 +413,15 @@ function MeScreen({ data, identity, session, onProfile, onSignOut, onReset, onDe
           <FormField label="Water goal (ml)" type="number" min={250} max={12000} step={250} value={water} onChange={setWater}/>
           <FormField label="Sleep goal (h)" type="number" min={1} max={16} step={0.5} value={sleep} onChange={setSleep}/>
         </div>
-        <FormField label="Activity goal (minutes)" type="number" min={1} max={1440} value={activity} onChange={setActivity}/>
+        <div className="grid2">
+          <FormField label="Activity goal (min)" type="number" min={1} max={1440} value={activity} onChange={setActivity}/>
+          <FormField label="Daily step goal" type="number" min={100} max={100000} step={500} value={steps} onChange={setSteps}/>
+        </div>
+        {unit!==p.weightUnit&&<p className="mini-help">Saving will convert all your recorded weights to {unit}.</p>}
         <Button block onClick={save} disabled={!name.trim()}>Save preferences</Button>
-        {message&&<div role="status" className="success">{message}</div>}
+        {message&&<div role="status" className={message.endsWith("saved.")?"success":"error"}>{message}</div>}
       </Card>
+      <RemindersCard reminders={p.reminders||{}} onChange={onReminders}/>
       <Card>
         <h3>Wellness questionnaire</h3>
         <p>Review or update the original 18-question SlimSyFit survey without AI.</p>
@@ -680,6 +473,16 @@ export default function App() {
   const [syncError,setSyncError] = useState("");
   const currentIdentity = session?.user?.id || (guestMode?"guest":null);
   const keyRef = useRef(null);
+  const badgeCountRef = useRef(null);
+  const [celebrate,setCelebrate] = useState(null);
+  useReminders(dataReady?data.profile.reminders:null);
+  useEffect(()=>{
+    if(!dataReady){badgeCountRef.current=null;return}
+    const badges=earnedBadges(data);
+    // First render after load just records the baseline; only new unlocks celebrate.
+    if(badgeCountRef.current!==null&&badges.length>badgeCountRef.current)setCelebrate(badges.at(-1));
+    badgeCountRef.current=badges.length;
+  },[data,dataReady]);
   useEffect(()=>{
     if(!supabase)return;
     let live=true;
@@ -775,7 +578,9 @@ export default function App() {
       return updated;
     });
   };
-  const patchProfile=profile=>setData(d=>({...d,profile}));
+  const patchProfile=profile=>setData(d=>({...d,profile:{...profile,weightUnit:d.profile.weightUnit}}));
+  const switchUnit=unit=>setData(d=>changeWeightUnit(d,unit));
+  const setReminders=reminders=>setData(d=>({...d,profile:{...d.profile,reminders}}));
   const addWater=()=>updateDay(today,d=>({...d,waterMl:safeMl((d.waterMl||0)+250)}));
   const changeWater=delta=>updateDay(today,d=>({...d,waterMl:safeMl((d.waterMl||0)+Math.round(delta))}));
   const startFasting=()=>{
@@ -883,19 +688,23 @@ export default function App() {
   return <div className="shell">
     {detailPage==="water"?<WaterView data={data} today={today} onWater={changeWater} onBack={goBack}/>:
       detailPage==="weight"?<WeightView data={data} today={today} updateDay={updateDay} onBack={goBack}/>:
+      detailPage==="activity"?<ActivityView data={data} today={today} updateDay={updateDay} onBack={goBack}/>:
       showPlan?<PlanView data={data} onBack={goBack} onTrack={()=>openTab("track")}/>:
       tab==="home"?<SlimsyHome data={data} today={today} setTab={openTab} addWater={addWater}
         onOpenPlan={()=>openTab("plan")} onOpenSettings={()=>openTab("me")}
         onOpenWater={()=>{setShowPlan(false);setDetailPage("water");window.scrollTo(0,0)}}
-        onOpenWeight={()=>{setShowPlan(false);setDetailPage("weight");window.scrollTo(0,0)}}/>:
+        onOpenWeight={()=>{setShowPlan(false);setDetailPage("weight");window.scrollTo(0,0)}}
+        onOpenActivity={()=>{setShowPlan(false);setDetailPage("activity");window.scrollTo(0,0)}}/>:
       tab==="track"?<TrackScreen data={data} date={date} onDate={setDate} updateDay={updateDay}/>:
       tab==="habits"?<HabitsScreen data={data} today={today} onFasting={()=>openTab("fasting")}
         onTrack={()=>openTab("track")} onProgress={()=>openTab("progress")}/>:
       tab==="fasting"?<FastingScreen data={data} now={now} onStart={startFasting} onFinish={finishFasting}
         onHoursChange={h=>setData(d=>({...d,profile:{...d.profile,fastingHours:h}}))}/>:
-      tab==="progress"?<ResultsView data={data} today={today}
+      tab==="progress"?<ResultsView data={data} today={today} identity={currentIdentity} updateDay={updateDay}
+        onActivity={()=>{setDetailPage("activity");window.scrollTo(0,0)}}
         onWeight={()=>{setDetailPage("weight");window.scrollTo(0,0)}} onTrack={()=>openTab("track")}/>:
       <MeScreen data={data} identity={currentIdentity} session={session} onProfile={patchProfile}
+        onUnitChange={switchUnit} onReminders={setReminders}
         onSignOut={signOut} onReset={reset} onDeleteAccount={deleteAccount} syncState={syncState}
         onEditSurvey={()=>setShowSurvey(true)}
         onConnect={()=>{
@@ -905,6 +714,7 @@ export default function App() {
           setGuestMode(false);setShowSurvey(false);setShowLogin(true);
           try{localStorage.removeItem("slimsyfit-freeapp:guest-active")}catch{}
         }}/>}
+    <MilestoneModal badge={celebrate} onClose={()=>setCelebrate(null)}/>
     {syncError && <div className="error" role="status" style={{margin:"0 20px 12px"}}>{syncError}</div>}
     <div className="navwrap"><nav className="navbar" aria-label="Main navigation">
       {NAV.map(({id,label,Icon})=><button type="button" key={id} className={"navitem"+((showPlan?id==="plan":(detailPage?false:tab===id))?" on":"")}

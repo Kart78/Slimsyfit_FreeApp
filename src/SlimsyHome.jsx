@@ -11,7 +11,7 @@ const TILES=[
   {id:"activity",title:"Activity",image:"/images/activity/move-today.png",color:"#FFF4E8",border:"#FBE4CD"},
   {id:"weight",title:"Weight & Progress",image:"/images/wellness/weight-bmi-bmr.png",color:"#F3F1FF",border:"#E4E3F8"}
 ];
-export default function SlimsyHome({data,today,setTab,onOpenPlan,onOpenSettings,onOpenWater,onOpenWeight,addWater}) {
+export default function SlimsyHome({data,today,setTab,onOpenPlan,onOpenSettings,onOpenWater,onOpenWeight,onOpenActivity,addWater}) {
   const p=data.profile,d=data.days[today]||{};
   const hour=new Date().getHours();
   const greeting=hour<12?"Good morning":hour<17?"Good afternoon":"Good evening";
@@ -27,10 +27,10 @@ export default function SlimsyHome({data,today,setTab,onOpenPlan,onOpenSettings,
   const stats={
     nutrition:{value:count+"/4 meals",detail:Math.round(count/4*100)+"% of today's meal logging",pct:count/4*100},
     water:{value:cups+"/8 cups",detail:Math.round(water/Math.max(p.waterGoalMl||2000,1)*100)+"% of daily hydration",pct:water/(p.waterGoalMl||2000)*100},
-    activity:{value:activity+"/"+(p.activityGoal||30)+" min",detail:Math.round(activity/(p.activityGoal||30)*100)+"% of daily movement",pct:activity/(p.activityGoal||30)*100},
+    activity:{value:activity+"/"+(p.activityGoal||30)+" min",detail:Math.round(activity/(p.activityGoal||30)*100)+"% of daily movement"+(d.steps?" · "+Number(d.steps).toLocaleString()+" steps":""),pct:activity/(p.activityGoal||30)*100},
     weight:{value:weight?weight+" "+(p.weightUnit||"kg"):"Add weight",detail:bmi?"BMI "+bmi+" · recorded progress":"Add a weigh-in to get started",pct:0}
   };
-  const openTile=id=>id==="water"?onOpenWater():id==="weight"?onOpenWeight():setTab("track");
+  const openTile=id=>id==="water"?onOpenWater():id==="weight"?onOpenWeight():id==="activity"?onOpenActivity():setTab("track");
   return <div className="original-home">
     <div className="original-home-head">
       <div>
@@ -79,7 +79,7 @@ export default function SlimsyHome({data,today,setTab,onOpenPlan,onOpenSettings,
       <div className="original-mini">
         <div className="original-mini-head"><img src={A+"/animations/walking.gif"} alt="Walking animation"/><div><span>MOVE TODAY</span><h3>Activity matters</h3></div></div>
         <p>Log your daily movement and keep your energy up.</p>
-        <button onClick={()=>setTab("track")}>Log Activity <ChevronRight size={15}/></button>
+        <button onClick={onOpenActivity}>Log Activity <ChevronRight size={15}/></button>
       </div>
       <div className="original-mini">
         <div className="original-mini-head"><span className="original-emblem">🏅</span><div><span>YOUR COMMITMENT</span><h3>{level.name}</h3></div></div>

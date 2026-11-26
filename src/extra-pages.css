@@ -1,0 +1,47 @@
+.sf-kicker{font-size:10.5px;font-weight:800;letter-spacing:.7px;color:#0a8f84}
+.sf-section{font-size:17px;font-weight:800;margin:18px 2px 10px}
+.sf-steps-main{display:flex;align-items:center;gap:12px}
+.sf-steps-main img{width:58px;height:58px;border-radius:15px;object-fit:cover;background:#eaf8ee}
+.sf-steps-main strong{display:block;font-size:28px;font-weight:900;line-height:1.1}
+.sf-steps-main small{font-size:11px;color:#7a9e9b}
+.sf-heading-row .sf-pill-btn,.sf-pill-btn{border:0;border-radius:99px;padding:9px 14px;background:linear-gradient(135deg,#0a8f84,#0e7490);color:#fff;font-weight:800;font-size:12px;display:flex;gap:5px;align-items:center}
+.sf-heading-row .sf-pill-btn.stop,.sf-pill-btn.stop{background:#fee2e2;color:#b91c1c}
+.sf-mini-progress.wide{width:100%;height:9px;margin:10px 0}
+.sf-goal-badge{min-width:56px;height:56px;border-radius:16px;background:#eaf8ee;display:grid;place-items:center;align-content:center;color:#16a34a}
+.sf-goal-badge b{font-size:17px}.sf-goal-badge small{font-size:9.5px;font-weight:800}
+.sf-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.sf-quick{border:1px solid #e4f0ed;border-radius:16px;padding:13px;text-align:left;display:flex;flex-direction:column;gap:3px;cursor:pointer}
+.sf-quick img{width:58px;height:58px;object-fit:cover;border-radius:12px}
+.sf-quick b{font-size:15px;color:#0d1f1e;margin-top:4px}.sf-quick small{font-size:12px;color:#7a9e9b}
+.sf-inline-entry select{padding:9px;border:1px solid #d8edea;border-radius:10px;background:#fff;flex:1;min-width:110px}
+.sf-icon-btn{border:0;background:#fee2e2;color:#b91c1c;border-radius:8px;width:26px;height:26px;display:inline-grid;place-items:center;margin-left:8px;vertical-align:middle;cursor:pointer}
+.sf-history-row span{display:flex;align-items:center;gap:6px}
+.sf-error{background:#fef2f2;color:#b91c1c;border-radius:10px;padding:9px 11px;font-size:12px}
+.sf-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.sf-photo{position:relative;margin:0;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e4f0ed}
+.sf-photo img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+.sf-photo figcaption{font-size:11px;color:#3d5a58;padding:7px 9px}
+.sf-photo .sf-icon-btn{position:absolute;top:7px;right:7px}
+.sf-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sf-compare img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:12px;margin:6px 0;background:#e9f0ef}
+.sf-compare select{width:100%;padding:7px;border:1px solid #d8edea;border-radius:9px}
+.sf-moods{display:flex;justify-content:space-between;gap:4px;margin-bottom:16px}
+.sf-moods button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px;border-radius:12px;opacity:.5;transition:.2s;cursor:pointer}
+.sf-moods button.on{opacity:1;transform:scale(1.12);background:#effbf7}
+.sf-moods span{font-size:32px}.sf-moods small{font-size:12px;font-weight:700;color:#3d5a58}
+.sf-range-label{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#3d5a58;margin:8px 0 6px}
+.sf-range{width:100%;accent-color:#0a8f84}
+.sf-textarea{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1px solid #d8edea;font:inherit;font-size:14px;resize:none}
+.sf-mood-week{display:flex;justify-content:space-around;align-items:end;gap:6px}
+.sf-mood-week>div{display:grid;justify-items:center;gap:6px}
+.sf-mood-week span{font-size:17px;height:22px}
+.sf-mood-week small{font-size:10px;color:#7a9e9b}
+.sf-result-tabs{overflow-x:auto;flex-wrap:nowrap}
+.sf-result-tabs button{flex:0 0 auto}
+.sf-modal-bg{position:fixed;inset:0;z-index:1000;background:#0d1f1e99;display:grid;place-items:center;padding:20px}
+.sf-modal{position:relative;background:#fff;border-radius:24px;padding:24px 20px 16px;max-width:360px;width:100%;text-align:center;animation:sfpop .35s ease}
+.sf-modal img{display:block;margin-left:auto;margin-right:auto;width:130px;height:130px;object-fit:cover;border-radius:24px;margin-bottom:12px}
+.sf-modal h2{margin:6px 0;font-size:24px}.sf-modal p{font-size:13px;color:#3d5a58;line-height:1.5}
+.sf-modal .sf-link-action{margin:0 auto;justify-content:center}
+.sf-modal-x{position:absolute;top:12px;right:12px;border:0;background:#f4f8f7;border-radius:50%;width:32px;height:32px;display:grid;place-items:center}
+@keyframes sfpop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}

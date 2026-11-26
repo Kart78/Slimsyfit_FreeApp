@@ -3,6 +3,7 @@ import {ArrowLeft,ArrowRight,Plus,Minus,ChevronRight,TrendingUp,Trophy,Check,Shi
 import {bmiValue,parseHeightCm,parseWeightKg,weightGoalProgress} from "./lib/metrics.js";
 import {earnedBadges,levelInfo,localDay,safeNumber,rangeDates} from "./lib/tracker.js";
 import "./wellness-pages.css";
+import {PhotosPanel,MoodPanel} from "./ExtraPages.jsx";
 const A="/assets/slimsyfit";
 const dateLabel=date=>new Date(date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"});
 const weightRows=data=>Object.entries(data.days).filter(([,d])=>d.weight!=null&&Number(d.weight)>0).sort((a,b)=>a[0].localeCompare(b[0]));
@@ -97,23 +98,25 @@ export function PlanView({data,onBack,onTrack}){
  </div>;
 }
 const ranges=[["1W",7],["1M",30],["3M",90],["6M",180],["1Y",365]];
-export function ResultsView({data,today,onWeight,onTrack}){
+export function ResultsView({data,today,onWeight,onTrack,onActivity,identity,updateDay}){
  const [section,setSection]=useState("Overview"),[range,setRange]=useState("3M");
  const p=data.profile,all=weightRows(data),days=ranges.find(x=>x[0]===range)?.[1]||90,from=new Date(today+"T12:00:00");from.setDate(from.getDate()-days+1);
  const selected=all.filter(([date])=>date>=localDay(from)&&date<=today);const latest=latestWeight(data),first=all[0]?.[1].weight??null;
  const diff=latest==null||first==null?null:+(latest-first).toFixed(1);
  const badges=earnedBadges(data),level=levelInfo(data),day=data.days[today]||{};
+ const towardGoal=weightGoalProgress(latest,p.currentWeight,p.targetWeight,p.weightUnit);
+ const progressNote=all.length<2?"Log your weight on a few different days to see your trend.":towardGoal!=null&&towardGoal>0?towardGoal+"% of the way to your goal weight.":diff===0?"Your weight is steady across your recorded weigh-ins.":"Your trend is based on "+all.length+" real weigh-ins.";
  const measures=[["Nutrition",day.meals?.length||0,4,"/images/nutrition/front-plan-bowl.png","meals"],["Hydration",day.waterMl||0,waterGoal(p),"/images/icons/water-drop.png","ml"],["Activity",(day.activity||[]).reduce((s,v)=>s+(Number(v.minutes)||0),0),p.activityGoal||30,"/images/activity/move-today.png","min"]];
  return <div className="sf-detail sf-results"><Header title="Results & Insights"/>
-  <div className="sf-result-tabs" role="tablist">{["Overview","Health Metrics","Achievements"].map(t=><button key={t} role="tab" aria-selected={section===t} className={section===t?"active":""} onClick={()=>setSection(t)}>{t==="Overview"?"↗ ":t==="Health Metrics"?"♡ ":"♜ "}{t}</button>)}</div>
+  <div className="sf-result-tabs" role="tablist">{["Overview","Health Metrics","Achievements","Photos","Mood"].map(t=><button key={t} role="tab" aria-selected={section===t} className={section===t?"active":""} onClick={()=>setSection(t)}>{({"Overview":"↗ ","Health Metrics":"♡ ","Achievements":"♜ ","Photos":"◫ ","Mood":"☺ "})[t]}{t}</button>)}</div>
   {section==="Overview"&&<>
-   <div className="sf-overview-note"><TrendingUp size={19}/><div><b>Your Progress</b><small>You're making steady progress towards your goals.</small></div></div>
+   <div className="sf-overview-note"><TrendingUp size={19}/><div><b>Your Progress</b><small>{progressNote}</small></div></div>
    <div className="sf-range-tabs">{ranges.map(([label])=><button key={label} className={range===label?"active":""} onClick={()=>setRange(label)}>{label}</button>)}</div>
    <div className="sf-card"><div className="sf-heading-row"><h3>Weight Trend ({p.weightUnit})</h3><span className="sf-green-chip">{diff==null?"Not logged":(diff>0?"+":"")+diff+" "+p.weightUnit}</span></div>
     <WeightLine records={selected} unit={p.weightUnit} height={180}/><p className="sf-help">{selected.length} measurements in the selected {range} range.</p></div>
-   <div className="sf-overview-note"><Trophy size={18}/><div><b>You're making great progress!</b><small>Keep it up. Small, consistent changes lead to better results.</small></div></div>
+   {all.length>=2&&<div className="sf-overview-note"><Trophy size={18}/><div><b>{all.length} weigh-ins recorded</b><small>Keep it up. Small, consistent changes lead to better results.</small></div></div>}
    <div className="sf-card"><ColorMetrics data={data}/></div>
-   <div className="sf-card">{measures.map(([name,value,max,img,units])=><button className="sf-result-progress" key={name} onClick={onTrack}>
+   <div className="sf-card">{measures.map(([name,value,max,img,units])=><button className="sf-result-progress" key={name} onClick={name==="Activity"&&onActivity?onActivity:onTrack}>
     <img src={A+img} alt=""/><div><b>{name}</b><small>{value?value+" "+units:"Not logged"}</small></div>
     <div className="sf-mini-progress"><span style={{width:Math.min(100,value/Math.max(1,max)*100)+"%"}}/></div><strong>{Math.round(value/Math.max(1,max)*100)}%</strong></button>)}</div>
    <div className="sf-card"><div className="sf-heading-row"><h3>Recent weigh-ins</h3><button onClick={onWeight}>View all</button></div>
@@ -125,5 +128,7 @@ export function ResultsView({data,today,onWeight,onTrack}){
   {section==="Achievements"&&<><div className="sf-overview-note"><Trophy size={20}/><div><b>{level.name}</b><small>{level.count} weight-check-in days · {badges.length} earned badges</small></div></div>
    <div className="sf-card"><h3>My achievements</h3>{Array.from({length:10},(_,i)=>(i+1)*10).map(n=><div key={n} className={"sf-award"+(badges.some(b=>b.count===n)?"":" locked")}>
     <img src={A+"/milestones/milestone-"+n+(n===10?".png":".jpg")} alt=""/><div><b>{n} entries</b><small>{badges.some(b=>b.count===n)?"Unlocked!":"Locked — keep tracking"}</small></div>{badges.some(b=>b.count===n)?<Check size={17}/>:<ShieldCheck size={16}/>}</div>)}</div></>}
+  {section==="Photos"&&<PhotosPanel identity={identity} latestWeight={latest} unit={p.weightUnit}/>}
+  {section==="Mood"&&updateDay&&<MoodPanel data={data} today={today} updateDay={updateDay}/>}
  </div>;
 }
