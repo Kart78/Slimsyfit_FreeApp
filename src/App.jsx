@@ -5,7 +5,7 @@ import {
   Heart, Home, Leaf, LogOut, Moon, Plus, Scale, ShieldCheck,
   Sparkles, Sunrise, Target, Trash2, TrendingUp, UtensilsCrossed, MessageCircle
 } from "lucide-react";
-import { supabase, isCloudConfigured, googleLogin, emailSignIn, emailSignUp } from "./lib/supabase.js";
+import { supabase, isCloudConfigured, googleLogin, emailSignIn, emailSignUp, requestPasswordReset, updateAccountPassword } from "./lib/supabase.js";
 import PublicLandingPage from "./PublicLandingPage.jsx";
 import SurveyFlow from "./SurveyFlow.jsx";
 import SlimsyHome from "./SlimsyHome.jsx";
@@ -84,7 +84,10 @@ function AuthLanding({ enterLocal }) {
   const login = async e => {
     e.preventDefault(); setBusy(true); setMessage("");
     try {
-      if (mode === "signup") {
+      if (mode === "forgot") {
+        await requestPasswordReset(email.trim());
+        setMessage("Check your inbox for a reset-password link.");
+      } else if (mode === "signup") {
         await emailSignUp(email.trim(), password);
         setMessage("Check your inbox for the confirmation email, then sign in.");
       } else {
@@ -103,25 +106,53 @@ function AuthLanding({ enterLocal }) {
     <h1>Your wellness.<br/><span className="accent">Your pace.</span></h1>
     <p className="sub">Welcome to Slimsyfit FreeApp. Track fasting, meals, water, sleep, movement and weight in one simple place.</p>
     <Card>
-      <h2 style={{marginBottom:5}}>{mode === "signin" ? "Welcome back" : "Create your free account"}</h2>
+      <h2 style={{marginBottom:5}}>{mode === "signin" ? "Welcome back" : mode === "forgot" ? "Reset your password" : "Create your free account"}</h2>
       <p>{isCloudConfigured ? "Sync your tracking data securely across devices." : "Cloud sign-in will be available after setting up the new Supabase project."}</p>
       <Button block outline disabled={!isCloudConfigured || busy} onClick={google}><Cloud size={17}/> Continue with Google</Button>
       <div className="dividerline"/>
       <form onSubmit={login}>
         <FormField label="Email" value={email} onChange={setEmail} type="email" placeholder="you@example.com"/>
-        <FormField label="Password" value={password} onChange={setPassword} type="password" placeholder="At least 6 characters"/>
-        <Button type="submit" block disabled={!isCloudConfigured||busy||!email.includes("@")||password.length<6}>
-          {busy?"Please wait…":mode==="signin"?"Sign in":"Sign up"} <ArrowRight size={15}/>
+        {mode !== "forgot"&&<FormField label="Password" value={password} onChange={setPassword} type="password" placeholder="At least 6 characters"/>}
+        <Button type="submit" block disabled={!isCloudConfigured||busy||!email.includes("@")||(mode!=="forgot"&&password.length<6)}>
+          {busy?"Please wait…":mode==="signin"?"Sign in":mode==="forgot"?"Send reset link":"Sign up"} <ArrowRight size={15}/>
         </Button>
       </form>
-      <button type="button" style={{border:0,background:"none",color:"#1a7455",fontWeight:800,marginTop:13,width:"100%",fontSize:12}}
+      <button type="button" style={{border:0,background:"none",color:"#0A8F84",fontWeight:800,marginTop:13,width:"100%",fontSize:12}}
         onClick={()=>{setMode(mode==="signin"?"signup":"signin");setMessage("")}}>
         {mode==="signin"?"New here? Create a free account":"Already registered? Sign in"}
       </button>
+      {mode==="signin"&&<button type="button" style={{border:0,background:"none",color:"#3D5A58",fontSize:12,width:"100%",marginTop:9}}
+        onClick={()=>{setMode("forgot");setMessage("")}}>Forgot password?</button>}
       {message && <div className={message.startsWith("Check")?"success":"error"} role="status">{message}</div>}
     </Card>
     <Button ghost block onClick={enterLocal}><CloudOff size={17}/> Continue without an account</Button>
     <p className="footer">Local mode saves on this device only. Google login requires a separate Supabase project.</p>
+  </main>;
+}
+
+function ResetPasswordScreen({ onDone }) {
+  const [password,setPassword]=useState("");
+  const [confirm,setConfirm]=useState("");
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState("");
+  const save=async e=>{
+    e.preventDefault();setBusy(true);setError("");
+    try{
+      if(password.length<10)throw new Error("Use at least 10 characters.");
+      if(password!==confirm)throw new Error("Passwords do not match.");
+      await updateAccountPassword(password);
+      onDone();
+    }catch(err){setError(err.message)}finally{setBusy(false)}
+  };
+  return <main className="authscreen"><h1>Choose a new password</h1>
+    <Card><form onSubmit={save}>
+      <FormField label="New password" type="password" value={password} onChange={setPassword}/>
+      <FormField label="Confirm password" type="password" value={confirm} onChange={setConfirm}/>
+      <Button type="submit" block disabled={busy||password.length<10||password!==confirm}>
+        {busy?"Saving…":"Update password"}
+      </Button>
+      {error&&<div role="alert" className="error">{error}</div>}
+    </form></Card>
   </main>;
 }
 
@@ -593,6 +624,8 @@ export default function App() {
   const [showSurvey,setShowSurvey] = useState(false);
   const [showLogin,setShowLogin] = useState(false);
   const [cloudWritable,setCloudWritable] = useState(true);
+  const [loadedIdentity,setLoadedIdentity] = useState(null);
+  const [passwordRecovery,setPasswordRecovery] = useState(false);
   const guestDraftRef=useRef(null);
   const [data,setData] = useState(createEmptyData);
   const [dataReady,setDataReady] = useState(false);
@@ -612,8 +645,10 @@ export default function App() {
       if(error)setSyncError(error.message);
       setSession(data?.session||null);setSessionReady(true);
     });
-    const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,s)=>{
+    const {data:{subscription}}=supabase.auth.onAuthStateChange((event,s)=>{
       if(!live)return;
+      if(event==="PASSWORD_RECOVERY")setPasswordRecovery(true);
+      if(event==="SIGNED_OUT"){setDataReady(false);setLoadedIdentity(null)}
       setSession(s||null);setSessionReady(true);
       if(s?.user)setGuestMode(false);
     });
@@ -628,7 +663,7 @@ export default function App() {
     let live=true;
     const identity=currentIdentity;
     keyRef.current=identity;
-    setDataReady(false);
+    setDataReady(false);setLoadedIdentity(null);
     setSyncState(identity==="guest"?"local":"loading");
     setCloudWritable(identity==="guest");
     const restore=async()=>{
@@ -639,8 +674,13 @@ export default function App() {
             .select("payload").eq("user_id",identity).maybeSingle();
           if(error)throw error;
           if(row?.payload&&Object.keys(row.payload).length) restored=normalizeData(row.payload);
-          else if(guestDraftRef.current?.profile?.name){restored=normalizeData(guestDraftRef.current)}
+          else {
+            let pending=guestDraftRef.current;
+            if(!pending){try{pending=JSON.parse(sessionStorage.getItem("freeapp:guest-transfer")||"null")}catch{}}
+            if(pending?.profile?.name)restored=normalizeData(pending);
+          }
           guestDraftRef.current=null;
+          try{sessionStorage.removeItem("freeapp:guest-transfer")}catch{}
           if(live){setCloudWritable(true);setSyncError("")}
         }catch(err){
           if(live){
@@ -652,14 +692,14 @@ export default function App() {
       if(!live||keyRef.current!==identity)return;
       setData(restored);
       setTab("home");setShowPlan(false);
-      setDataReady(true);
+      setLoadedIdentity(identity);setDataReady(true);
       setSyncState(identity==="guest"?"local":"synced");
     };
     void restore();
     return ()=>{live=false};
   },[currentIdentity,sessionReady]);
   useEffect(()=>{
-    if(!dataReady||!currentIdentity)return;
+    if(!dataReady||!currentIdentity||loadedIdentity!==currentIdentity)return;
     const identity=currentIdentity;
     saveLocal(identity,data);
     if(identity==="guest"||!supabase||!cloudWritable)return;
@@ -676,7 +716,7 @@ export default function App() {
       }
     },700);
     return ()=>clearTimeout(timer);
-  },[data,dataReady,currentIdentity,cloudWritable]);
+  },[data,dataReady,currentIdentity,cloudWritable,loadedIdentity]);
   const today=localDay();
   const updateDay=(dateKey,change)=>{
     setData(previous=>{
@@ -711,12 +751,16 @@ export default function App() {
   };
   const signOut=async()=>{
     if(supabase&&session) await supabase.auth.signOut();
-    setSession(null);setGuestMode(false);setDataReady(false);
+    setSession(null);setGuestMode(false);setDataReady(false);setLoadedIdentity(null);
     setShowLogin(false);setShowSurvey(false);setShowPlan(false);setCloudWritable(false);
   };
+  if(passwordRecovery)return <ResetPasswordScreen onDone={()=>{
+    setPasswordRecovery(false);setShowLogin(false);setShowSurvey(false);
+    window.history.replaceState({}, "", "/");
+  }}/>;
   if(!sessionReady)return <div className="authscreen"><div className="logo"><Leaf/></div><h2>Loading FreeApp…</h2></div>;
   if(!currentIdentity) return showLogin
-    ? <AuthLanding enterLocal={()=>{setGuestMode(true);setShowSurvey(true);setShowLogin(false)}}/>
+    ? <AuthLanding enterLocal={()=>{setGuestMode(true);setShowSurvey(!loadLocal("guest").profile.name);setShowLogin(false)}}/>
     : <PublicLandingPage
         onNew={()=>{setGuestMode(true);setShowSurvey(true)}}
         onSignIn={()=>setShowLogin(true)}/>;
@@ -761,6 +805,7 @@ export default function App() {
         onEditSurvey={()=>setShowSurvey(true)}
         onConnect={()=>{
           guestDraftRef.current=structuredClone(data);
+          try{sessionStorage.setItem("freeapp:guest-transfer",JSON.stringify(data))}catch{}
           saveLocal("guest",data);
           setGuestMode(false);setShowSurvey(false);setShowLogin(true);
         }}/>}
