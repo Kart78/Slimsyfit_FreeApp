@@ -45,16 +45,24 @@ export function dayHasEntry(d) {
     (d?.activity?.length || 0) > 0 || Object.values(d?.habits || {}).some(Boolean)
   );
 }
+export function weightEntryCount(data) {
+  // Match original SlimSyFit: commitment milestones use actual weight-log entries,
+  // not simulated days, water taps or other session-only activity.
+  return Object.values(data.days || {}).filter(day => day?.weight != null && Number(day.weight) > 0).length;
+}
 export function levelInfo(data) {
-  const count = entryCount(data);
-  if (count >= 21) return { name: "Lifestyle", count, nextAt: null, progress: 100 };
-  if (count >= 7) return { name: "Building the Habit", count, nextAt: 21, progress: Math.min(100, Math.round((count - 7) / 14 * 100)) };
-  return { name: "Newbie", count, nextAt: 7, progress: Math.min(100, Math.round(count / 7 * 100)) };
+  const count = weightEntryCount(data);
+  if (count >= 30) return { name:"Lifestyle", count, nextAt:null, progress:100 };
+  if (count >= 7) return { name:"Building the Habit", count, nextAt:30,
+    progress:Math.min(100, Math.round((count - 7) / 23 * 100)) };
+  return { name:"Newbie", count, nextAt:7,
+    progress:Math.min(100, Math.round(count / 7 * 100)) };
 }
 export function earnedBadges(data) {
-  const count = entryCount(data);
-  return Array.from({ length: 10 }, (_, i) => (i + 1) * 10)
-    .filter(n => n <= count).map(n => ({ count: n, title: n === 100 ? "Legendary Consistency" : n === 50 ? "Halfway Hero" : n === 10 ? "First Milestone" : n + "-Day Milestone" }));
+  const count = weightEntryCount(data);
+  return Array.from({ length:10 }, (_,i)=>(i+1)*10)
+    .filter(n=>n<=count)
+    .map(n=>({count:n, title:n===100?"Legendary!":n===50?"Halfway There!":n===10?"Great Start!":n+" Entries"}));
 }
 export function rangeDates(endDate, numDays) {
   const base = new Date(endDate + "T12:00:00");
