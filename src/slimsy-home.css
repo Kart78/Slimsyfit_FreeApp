@@ -37,3 +37,16 @@
 .original-mini button{border:0;background:#EFFEFA;color:#0A8F84;font-weight:700;font-size:11px;border-radius:9px;padding:9px;display:flex;align-items:center;gap:3px}
 .original-disclaimer{padding:20px 0;text-align:center;color:#7A9E9B;font-size:10px}
 @media(max-width:380px){.original-home{padding:25px 13px 24px}.original-tiles{gap:9px}.original-tile{padding:11px;min-height:225px}.original-tile h3{font-size:16px}.original-tile strong{font-size:20px}.original-plan img{width:108px;height:108px}.original-mini{padding:10px}.original-mini-head img,.original-emblem{width:40px;height:40px}}
+
+.original-focus{display:flex;gap:12px;align-items:center;margin:14px 0;padding:14px;border:1px solid #d8edea;border-radius:18px;background:#fff;box-shadow:0 4px 14px #0d1f1e08}
+.original-focus-mark{height:48px;width:48px;flex-shrink:0;display:grid;place-items:center;background:#e7f8ed;border-radius:15px;color:#0a8f84;font-size:31px;font-weight:700}
+.original-focus span,.original-latest-title span{display:block;font-size:10px;letter-spacing:.055em;font-weight:800;color:#0a8f84;margin-bottom:6px}
+.original-focus h3{font-size:13px;margin:0;line-height:1.35}
+.original-latest{background:#fff;border:1px solid #e1f0ed;border-radius:18px;padding:14px;margin:15px 0}
+.original-latest-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:13px}
+.original-latest-title h3{font-size:16px;margin:0;letter-spacing:-.2px}
+.original-latest-title button{background:none;border:0;font-size:12px;font-weight:800;color:#0a8f84;white-space:nowrap}
+.original-latest .sf-metrics-trio{gap:8px}
+.original-latest .sf-metric{min-height:123px;padding:10px 5px}
+.original-latest .sf-metric img{width:43px;height:43px}
+.original-latest .sf-metric strong{font-size:18px}
