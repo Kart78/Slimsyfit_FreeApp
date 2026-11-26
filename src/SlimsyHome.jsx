@@ -71,7 +71,7 @@ export default function SlimsyHome({data,today,setTab,onOpenPlan,onOpenSettings,
       </div>
       <div className="original-mini">
         <div className="original-mini-head"><span className="original-emblem">🏅</span><div><span>YOUR COMMITMENT</span><h3>{level.name}</h3></div></div>
-        <p>{level.count} logged days · {earnedBadges(data).length} achievement badges</p>
+        <p>{level.count} weight entries · {earnedBadges(data).length} achievement badges</p>
         <button onClick={()=>setTab("progress")}>View Results <ChevronRight size={15}/></button>
       </div>
     </div>

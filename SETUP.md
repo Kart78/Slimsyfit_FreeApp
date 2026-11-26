@@ -5,20 +5,20 @@ This repository is a **new, standalone application**, not a branch, fork deploym
 ## Architecture
 
 - Frontend: React 18 + Vite
-- Hosting: create a **new** Vercel project linked only to \`Kart78/Slimsyfit_FreeApp\`
+- Hosting: create a **new** Vercel project linked only to `Kart78/Slimsyfit_FreeApp`
 - Authentication: Google OAuth / email/password using a **new** Supabase project
-- User data: new Supabase Postgres table \`public.wellness_records\` with user-specific row-level security
+- User data: new Supabase Postgres table `public.wellness_records` with user-specific row-level security
 - Offline/local mode: browser localStorage (not synchronized between devices)
 - AI, Stripe, payment gateway, paid subscriptions, Fitbit, and mandatory connected devices: **none**
 
 ## 1. Run locally
 
-\`\`\`powershell
+```powershell
 git clone https://github.com/Kart78/Slimsyfit_FreeApp.git
 cd Slimsyfit_FreeApp
 npm install
 npm run dev
-\`\`\`
+```
 
 Open the development URL printed by Vite (usually http://localhost:5173).
 
@@ -31,12 +31,12 @@ Do not use credentials or database tables from the original SlimSyFit project.
 1. Create a separate project at https://supabase.com/dashboard
 2. In **SQL Editor**, run [supabase/schema.sql](supabase/schema.sql)
 3. In **Project Settings → API**, copy the project URL and publishable/anon key.
-4. Create a local file \`.env.local\` from \`.env.example\`:
+4. Create a local file `.env.local` from `.env.example`:
 
-\`\`\`dotenv
+```dotenv
 VITE_SUPABASE_URL=https://YOUR-NEW-PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=YOUR-NEW-PUBLIC-ANON-KEY
-\`\`\`
+```
 
 **Do not put the service_role key in VITE_ variables.** Vite exposes those values to the browser. The schema restricts each logged-in user to their own row through RLS.
 
@@ -44,18 +44,18 @@ VITE_SUPABASE_ANON_KEY=YOUR-NEW-PUBLIC-ANON-KEY
 
 1. Supabase → Authentication → Providers → Google → enable
 2. Create a separate Google OAuth client in Google Cloud Console
-3. In that Google client, add the **new Supabase callback URL** displayed by Supabase, usually \`https://YOUR-NEW-PROJECT.supabase.co/auth/v1/callback\`
+3. In that Google client, add the **new Supabase callback URL** displayed by Supabase, usually `https://YOUR-NEW-PROJECT.supabase.co/auth/v1/callback`
 4. Enter Google Client ID and Client Secret inside Supabase Authentication
-5. Supabase → Authentication → URL Configuration: add \`http://localhost:5173/**\` and your **new Vercel project URL** as allowed redirects
+5. Supabase → Authentication → URL Configuration: add `http://localhost:5173/**` and your **new Vercel project URL** as allowed redirects
 
-Do not reuse original app OAuth redirects or bind this app to \`slimsyfit.com\`.
+Do not reuse original app OAuth redirects or bind this app to `slimsyfit.com`.
 
 ## 4. New Vercel deployment
 
 1. Vercel → **Add New → Project**
 2. Import **Kart78/Slimsyfit_FreeApp**
-3. Framework preset Vite; Build command \`npm run build\`; Output \`dist\`
-4. Add \`VITE_SUPABASE_URL\` and \`VITE_SUPABASE_ANON_KEY\` for the **new** project
+3. Framework preset Vite; Build command `npm run build`; Output `dist`
+4. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for the **new** project
 5. Deploy under a distinct Vercel hostname or new domain
 6. Add its hostname to the new Supabase Authentication redirect URLs
 
@@ -63,18 +63,18 @@ Never import an existing Vercel SlimSyFit project, replace its connected reposit
 
 ## 5. Account separation and storage
 
-- Guest records are saved in device browser storage under the \`slimsyfit-freeapp:v1:guest\` namespace.
-- Signed-in users have a separate browser key by their Supabase user ID, and a separate row in \`wellness_records\`.
+- Guest records are saved in device browser storage under the `slimsyfit-freeapp:v1:guest` namespace.
+- Signed-in users have a separate browser key by their Supabase user ID, and a separate row in `wellness_records`.
 - No paid subscription or AI API is required to use any screen.
 - Cloud changes are saved after a short debounce; active multiple-device simultaneous edits can overwrite each other, so avoid editing the same account simultaneously on two devices during this initial version.
-- "Delete tracking history" deletes the user data row and resets the tracker. It does **not** delete the authentication account; a complete account deletion workflow needs an authenticated server-side function.
+- "Delete tracking history" deletes the user data row and resets the tracker. It does **not** delete the authentication account; full account deletion calls the included Edge Function; deploy it into the separate FreeApp Supabase project first.
 
 ## 6. Release checklist
 
 - [ ] Google OAuth, signup, signout, and email confirmation work in the **new** Supabase project
 - [ ] A new account sees an empty tracker with no sample/fake logs
 - [ ] Water, meals, sleep, weight, movement, habits and fasting save and refresh properly
-- [ ] Progress levels at 7 and 21 logged days work; achievements at 10-day milestones work
+- [ ] Commitment levels unlock at 7 and 30 weight check-in days, and achievements every 10 weight entries
 - [ ] Logged-in data syncs and respects per-user RLS
 - [ ] Check new Vercel URL/mobile appearance
 - [ ] Test on Android before packaging; use a **new** application ID and signing configuration
@@ -83,9 +83,28 @@ Never import an existing Vercel SlimSyFit project, replace its connected reposit
 
 ## Build / test
 
-\`\`\`powershell
+```powershell
 npm test
 npm run build
-\`\`\`
+```
 
 The app is a web/PWA-friendly foundation. A **new Android package** has not been generated or published. The original SlimSyFit app remains unaffected.
+
+## 7. Account deletion (independent project only)
+
+The app includes an authenticated Supabase Edge Function at `supabase/functions/delete-account/index.ts`. To activate complete account deletion:
+
+1. Install the Supabase CLI and log in to the *new* FreeApp Supabase project.
+2. Set `FREEAPP_ORIGIN=https://healthyfy-eta.vercel.app` as a project function secret. Set the exact final production origin if different.
+3. Deploy `supabase functions deploy delete-account --project-ref YOUR_NEW_FREEAPP_PROJECT`.
+4. Test deleting a dedicated test account. It removes the auth user and, via CASCADE, their `wellness_records` row. It never touches original SlimSyFit users.
+
+Do not enter a service-role key in the frontend. Supabase Edge Function has server-only access to `SUPABASE_SERVICE_ROLE_KEY`.
+
+## 8. Installable PWA
+
+The FreeApp has a distinct web manifest and service worker for browser installation. Use the new hostname only. Android Play Store packaging under a separate app ID, signing key and privacy listing is a separate release step and is **not** yet completed.
+
+## 9. Browser QA
+
+Run `npx playwright install chromium` followed by `npx playwright test`. Automated browser tests exercise the landing page, full 18-question survey, guest logging, refresh and navigation on desktop and mobile.

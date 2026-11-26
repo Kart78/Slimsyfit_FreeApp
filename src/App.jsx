@@ -225,7 +225,7 @@ function HomeScreen({ data, today, setTab, addWater, showPlan }) {
       <h1>{pageGreeting()},<br/>{p.name.split(" ")[0]}! 👋</h1>
       <p>Small steps are adding up. Keep going at your own pace.</p>
       <div className="statstripe">
-        <div><b>{info.count}</b><span>Logged days</span></div>
+        <div><b>{info.count}</b><span>Weight logs</span></div>
         <div><b>{info.name}</b><span>Current level</span></div>
         <div><b>{earnedBadges(data).length}</b><span>Badges earned</span></div>
       </div>
@@ -246,7 +246,7 @@ function HomeScreen({ data, today, setTab, addWater, showPlan }) {
       <Card>
         <div className="row"><div><h3>Progress level</h3><Tag><Award size={13}/>{info.name}</Tag></div>
           <span className="number" style={{fontSize:24}}>{info.nextAt||"✓"}</span></div>
-        <p style={{margin:"12px 0"}}>{info.nextAt ? "Log on "+(info.nextAt-info.count)+" more distinct days to unlock the next level." : "Lifestyle unlocked! Keep showing up for yourself."}</p>
+        <p style={{margin:"12px 0"}}>{info.nextAt ? "Record weight on "+(info.nextAt-info.count)+" more distinct days to unlock the next level." : "Lifestyle unlocked! Keep showing up for yourself."}</p>
         <ProgressLine value={info.progress} total={100}/>
       </Card>
       <Card>
@@ -397,7 +397,7 @@ function HabitsScreen({data,today,onFasting,onTrack,onProgress}) {
         <Button outline block disabled={data.profile.fastingAllowed===false} onClick={onFasting}><Flame size={16}/> Open fasting timer</Button>
       </Card>
       <Card><h3>Your commitment</h3><Tag>{goal.name}</Tag>
-        <p style={{marginTop:12}}>Consistency is measured from days with actual tracking entries. No fabricated logs or paid challenges.</p>
+        <p style={{marginTop:12}}>Commitment levels unlock at 7 and 30 days with a real weight entry, matching the original SlimSyFit rules.</p>
         <Button ghost block onClick={onProgress}>Achievements and progress <ChevronRight size={16}/></Button>
       </Card>
     </div>
@@ -500,14 +500,14 @@ function ProgressScreen({ data, today }) {
     <SectionTitle note="Based on real entries">Your progress</SectionTitle>
     <div className="content">
       <div className="grid2">
-        <Card className="metric"><span className="emoji">📆</span><div><b>{info.count}</b><span>Days logged</span></div></Card>
+        <Card className="metric"><span className="emoji">📆</span><div><b>{info.count}</b><span>Weight logs</span></div></Card>
         <Card className="metric"><span className="emoji">🏅</span><div><b>{badges.length}</b><span>Badges earned</span></div></Card>
       </div>
       <Card>
         <div className="row"><div><h3>My current level</h3><Tag><Award size={13}/>{info.name}</Tag></div><span className="number">{info.count} days</span></div>
-        <p style={{marginTop:13}}>{info.nextAt?"Next level unlocks at "+info.nextAt+" distinct logged days.":"You've reached Lifestyle!"}</p>
+        <p style={{marginTop:13}}>{info.nextAt?"Next level unlocks at "+info.nextAt+" distinct weight entries.":"You've reached Lifestyle!"}</p>
         <ProgressLine value={info.progress} total={100}/>
-        <div className="mini-help" style={{marginTop:9}}>Levels unlock at 7 and 21 days. Locked levels remain hidden until achieved.</div>
+        <div className="mini-help" style={{marginTop:9}}>Levels unlock at 7 and 30 weight check-ins. Locked levels remain hidden until achieved.</div>
       </Card>
       <Card>
         <div className="row"><h3>Water · last 7 days</h3><Tag>Avg {(avg/1000).toFixed(2)} L</Tag></div>
@@ -542,8 +542,8 @@ function ProgressScreen({ data, today }) {
           </div>
           <div><strong style={{fontSize:13}}>{b.title}</strong><div className="muted">{b.count} logged days</div></div>
           <Check size={16} style={{marginLeft:"auto",color:"#1c8e68"}}/>
-        </div>) : <div className="empty">Your first badge unlocks after 10 logged days.</div>}
-        <p className="mini-help">Badges unlock for 10, 20, 30 ... 100 distinct days of real tracking.</p>
+        </div>) : <div className="empty">Your first badge unlocks after 10 real weight entries.</div>}
+        <p className="mini-help">Badges unlock for 10, 20, 30 ... 100 recorded weight entries.</p>
       </Card>
     </div>
   </>;
