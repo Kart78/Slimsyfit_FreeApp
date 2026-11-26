@@ -21,7 +21,7 @@ const NAV = [
   { id: "home", label: "Home", Icon: Home },
   { id: "track", label: "Nutrition", Icon: Activity },
   { id: "plan", label: "Plan", Icon: CalendarDays },
-  { id: "habits", label: "Habits", Icon: MessageCircle },
+  { id: "habits", label: "Coach", Icon: MessageCircle },
   { id: "progress", label: "Results", Icon: TrendingUp }
 ];
 const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
@@ -378,7 +378,7 @@ function HabitsScreen({data,today,onFasting,onTrack,onProgress}) {
   const completed=Object.values(day.habits||{}).filter(Boolean).length;
   const goal=levelInfo(data);
   return <>
-    <SectionTitle note="No AI needed">Healthy habits</SectionTitle>
+    <SectionTitle note="Manual wellness guidance · No AI">Healthy habits</SectionTitle>
     <div className="content">
       <Card>
         <div className="row start">
