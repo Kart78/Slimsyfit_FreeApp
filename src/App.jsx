@@ -859,7 +859,7 @@ export default function App() {
           fastingAllowed:!needsReview,fastingHours:needsReview?12:fastingChoice,
           weightUnit,surveyAnswers:answers};
         const hasWeight=Object.values(prev.days).some(d=>d.weight!=null&&Number(d.weight)>0);
-        const supplied=Number(String(answers.currentWeight||"").match(/^[\\d.]+/)?.[0]);
+        const supplied=Number(String(answers.currentWeight||"").match(/^[0-9.]+/)?.[0]);
         const days=!hasWeight&&Number.isFinite(supplied)&&supplied>0
           ? {...prev.days,[today]:{...blankDay(),...(prev.days[today]||{}),weight:supplied}}
           : prev.days;
