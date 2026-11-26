@@ -4,6 +4,9 @@ test("original landing -> 18 survey questions -> local dashboard -> saved tracki
   const errors=[];
   page.on("pageerror",error=>errors.push(error.message));
   await page.goto("/");
+  console.log("DEBUG TITLE",await page.title());
+  console.log("DEBUG BODY", (await page.locator("body").innerText()).slice(0,1200));
+  console.log("DEBUG ERRORS",errors);
   await expect(page.getByRole("heading",{name:"Build a Healthier You, Your Way"})).toBeVisible();
   await expect(page.locator(".public-brand img")).toBeVisible();
   await page.getByRole("button",{name:"Build my plan"}).click();
