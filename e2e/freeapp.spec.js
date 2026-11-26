@@ -4,11 +4,9 @@ test("original landing -> 18 survey questions -> local dashboard -> saved tracki
   const errors=[];
   page.on("pageerror",error=>errors.push(error.message));
   await page.goto("/");
-  console.log("DEBUG TITLE",await page.title());
-  console.log("DEBUG BODY", (await page.locator("body").innerText()).slice(0,1200));
-  console.log("DEBUG ERRORS",errors);
   await expect(page.getByRole("heading",{name:"Build a Healthier You, Your Way"})).toBeVisible();
   await expect(page.locator(".public-brand img")).toBeVisible();
+  await page.screenshot({path:"test-results/"+test.info().project.name+"-landing.png",fullPage:true});
   await page.getByRole("button",{name:"Build my plan"}).click();
 
   const questions=[
@@ -50,6 +48,7 @@ test("original landing -> 18 survey questions -> local dashboard -> saved tracki
   await page.getByRole("textbox",{name:"Your name"}).fill("Test User");
   await page.getByRole("button",{name:/Continue to Free Tracker/}).click();
   await expect(page.getByText("TODAY’S PRIORITY")).toBeVisible();
+  await page.screenshot({path:"test-results/"+test.info().project.name+"-dashboard.png",fullPage:true});
   await expect(page.getByRole("heading",{name:"Nutrition"})).toBeVisible();
   await page.getByRole("button",{name:"Nutrition",exact:true}).last().click();
   await expect(page.getByRole("heading",{name:"Daily tracking"})).toBeVisible();
@@ -63,6 +62,6 @@ test("original landing -> 18 survey questions -> local dashboard -> saved tracki
   await page.getByRole("button",{name:"Habits",exact:true}).click();
   await expect(page.getByRole("heading",{name:"Healthy habits"})).toBeVisible();
   await page.getByRole("button",{name:"Open fasting timer"}).click();
-  await expect(page.getByRole("heading",{name:"Fasting"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Fasting",exact:true})).toBeVisible();
   expect(errors).toEqual([]);
 });
