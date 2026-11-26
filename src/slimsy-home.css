@@ -1,0 +1,39 @@
+.original-home{padding:32px 20px 35px;background:#F4F7F6;font-family:'Bricolage Grotesque','DM Sans',system-ui,sans-serif;color:#0D1F1E}
+.original-home-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:24px}
+.original-home-head h1{font-size:clamp(24px,5.5vw,30px);font-weight:800;letter-spacing:-.05em;line-height:1.22;margin:0 0 8px}
+.original-home-head h1 span{font-size:27px}
+.original-home-head p{font-size:15px;color:#7A9E9B;margin:0}
+.original-settings{width:49px;height:49px;border-radius:50%;background:#fff;border:1.5px solid #D8EDEA;flex-shrink:0;display:grid;place-items:center;color:#3D5A58}
+.original-priority{display:flex;align-items:flex-start;gap:14px;padding:20px 18px;margin-bottom:17px;background:#E9F7F0;border:1.5px solid #A7F3ED;border-radius:23px;box-shadow:0 9px 24px #0a8f8409}
+.original-priority>img{height:55px;width:55px;border-radius:16px;object-fit:cover;flex-shrink:0}
+.original-priority span,.original-plan span,.original-mini-head span{font-size:11px;font-weight:800;color:#0A8F84;letter-spacing:.085em}
+.original-priority h2{font-size:21px;letter-spacing:-.03em;margin:10px 0 8px}
+.original-priority p{color:#3D5A58;font-size:13px;line-height:1.6;margin:0}
+.original-plan{border:1.5px solid #D8EDEA;background:linear-gradient(120deg,#E9F7F0,#fff);border-radius:23px;padding:20px 17px;display:flex;align-items:center;width:100%;text-align:left;gap:9px;overflow:hidden;min-height:156px;margin-bottom:18px;position:relative}
+.original-plan>div{flex:1;position:relative;z-index:1}
+.original-plan h2{font-size:19px;margin:9px 0 7px}
+.original-plan p{font-size:12px;color:#3D5A58;margin:0 0 13px;line-height:1.5}
+.original-plan b{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#0A8F84}
+.original-plan img{width:125px;height:125px;object-fit:cover;border-radius:22px;flex-shrink:0;margin-right:-27px}
+.original-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.original-tile{border:1.5px solid;border-radius:22px;padding:14px;min-height:230px;text-align:left;display:flex;flex-direction:column;align-items:stretch;box-shadow:0 3px 9px #0d1f1e06;transition:transform .18s}
+.original-tile:active{transform:scale(.985)}
+.original-tile-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px}
+.original-tile-top img{height:72px;width:72px;object-fit:cover;border-radius:17px}
+.original-tile:nth-child(2) .original-tile-top img{object-fit:contain;padding:5px}
+.original-tile-top svg{color:#7A9E9B}
+.original-tile h3{font-size:18px;line-height:1.2;margin:0 0 8px}
+.original-tile strong{font-size:23px;line-height:1.25;letter-spacing:-.04em;font-weight:800}
+.original-tile p{color:#7A9E9B;font-size:12px;margin:5px 0 14px;line-height:1.35}
+.original-track{height:7px;border-radius:99px;background:#ffffffb8;margin-top:auto;overflow:hidden}
+.original-track>div{height:100%;background:#0A8F84;border-radius:99px}
+.original-subcards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.original-mini{border:1px solid #D8EDEA;background:#fff;border-radius:19px;padding:13px;min-width:0}
+.original-mini-head{display:flex;gap:9px;align-items:center}
+.original-mini-head img,.original-emblem{width:48px;height:48px;object-fit:cover;background:#EFFEFA;border-radius:12px;display:grid;place-items:center;font-size:23px;flex-shrink:0}
+.original-mini-head span{font-size:9px}
+.original-mini-head h3{font-size:14px;line-height:1.2;margin:3px 0 0}
+.original-mini p{color:#7A9E9B;font-size:12px;margin:10px 0}
+.original-mini button{border:0;background:#EFFEFA;color:#0A8F84;font-weight:700;font-size:11px;border-radius:9px;padding:9px;display:flex;align-items:center;gap:3px}
+.original-disclaimer{padding:20px 0;text-align:center;color:#7A9E9B;font-size:10px}
+@media(max-width:380px){.original-home{padding:25px 13px 24px}.original-tiles{gap:9px}.original-tile{padding:11px;min-height:225px}.original-tile h3{font-size:16px}.original-tile strong{font-size:20px}.original-plan img{width:108px;height:108px}.original-mini{padding:10px}.original-mini-head img,.original-emblem{width:40px;height:40px}}
