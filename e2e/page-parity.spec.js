@@ -56,9 +56,15 @@ test("original-style Home, Hydration, Weight, Plan and Results pages remain func
  await expect(page.getByText("My achievements")).toBeVisible();
  await page.getByRole("tab",{name:/Overview/}).click();
  await page.screenshot({path:"test-results/"+test.info().project.name+"-results-parity.png",fullPage:true});
+ await expect.poll(async()=>page.evaluate(()=>{
+   const value=JSON.parse(localStorage.getItem("slimsyfit-freeapp:v1:guest")||"{}");
+   const d=new Date(),today=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+   return value.days?.[today]?.weight;
+ })).toBe(177);
  await page.reload();
  await expect(page.getByText("TODAY’S PRIORITY")).toBeVisible();
  await page.locator(".original-tile").filter({hasText:"Weight & Progress"}).click();
+ console.log("WEIGHT AFTER REFRESH",await page.evaluate(()=>localStorage.getItem("slimsyfit-freeapp:v1:guest")));
  await expect(page.getByText("177 lbs").first()).toBeVisible();
  expect(errors).toEqual([]);
 });
