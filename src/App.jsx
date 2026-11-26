@@ -585,10 +585,14 @@ function MeScreen({ data, identity, session, onProfile, onSignOut, onReset, onDe
   const [sleep,setSleep]=useState(p.sleepGoal);
   const [activity,setActivity]=useState(p.activityGoal);
   const [unit,setUnit]=useState(p.weightUnit);
+  const [exactAge,setExactAge]=useState(p.exactAge||"");
+  const [targetWeight,setTargetWeight]=useState(p.targetWeight||"");
   const [message,setMessage]=useState("");
   const save=()=>{
     if(!name.trim())return;
-    onProfile({...p,name:name.trim(),diet,waterGoalMl:safeMl(water),sleepGoal:Number(sleep),activityGoal:Number(activity),weightUnit:unit});
+    const validatedAge=exactAge===""?"":(Number.isInteger(Number(exactAge))&&Number(exactAge)>=18&&Number(exactAge)<=110?Number(exactAge):null);
+    if(validatedAge===null){setMessage("Enter a valid exact age (18–110), or leave it blank.");return}
+    onProfile({...p,name:name.trim(),diet,waterGoalMl:safeMl(water),sleepGoal:Number(sleep),activityGoal:Number(activity),weightUnit:unit,exactAge:validatedAge,targetWeight});
     setMessage("Profile and goals saved.");setTimeout(()=>setMessage(""),3000);
   };
   const exportData=()=>{
@@ -610,6 +614,8 @@ function MeScreen({ data, identity, session, onProfile, onSignOut, onReset, onDe
         <FormField label="Name" value={name} onChange={setName}/>
         <SelectField label="Diet" value={diet} onChange={setDiet} options={["Any","Vegetarian","Vegan","Non-vegetarian"]}/>
         <SelectField label="Weight unit" value={unit} onChange={setUnit} options={["kg","lbs"]}/>
+        <FormField label="Exact age (optional, for BMR estimate)" type="number" min={18} max={110} value={exactAge} onChange={setExactAge}/>
+        <FormField label="Target weight (optional, include unit)" value={targetWeight} onChange={setTargetWeight} placeholder="Example: 165 lbs"/>
         <div className="grid2">
           <FormField label="Water goal (ml)" type="number" min={250} max={12000} step={250} value={water} onChange={setWater}/>
           <FormField label="Sleep goal (h)" type="number" min={1} max={16} step={0.5} value={sleep} onChange={setSleep}/>
