@@ -59,7 +59,7 @@ test("original landing -> 18 survey questions -> local dashboard -> saved tracki
   await expect(page.getByText("TODAY’S PRIORITY")).toBeVisible();
   await page.getByRole("button",{name:"Nutrition",exact:true}).last().click();
   await expect(page.getByText("250", {exact:false}).first()).toBeVisible();
-  await page.getByRole("button",{name:"Habits",exact:true}).click();
+  await page.getByRole("button",{name:"Coach",exact:true}).click();
   await expect(page.getByRole("heading",{name:"Healthy habits"})).toBeVisible();
   await page.getByRole("button",{name:"Open fasting timer"}).click();
   await expect(page.getByRole("heading",{name:"Fasting",exact:true})).toBeVisible();
