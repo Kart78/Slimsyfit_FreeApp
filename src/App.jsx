@@ -763,7 +763,11 @@ export default function App() {
     setData(previous=>{
       const old=previous.days[dateKey]||blankDay();
       const next=change(old);
-      return {...previous,days:{...previous.days,[dateKey]:next}};
+      const updated={...previous,days:{...previous.days,[dateKey]:next}};
+      // Manual logs must survive an immediate page reload; persist at mutation time.
+      // The existing data effect separately synchronizes signed-in users to Supabase.
+      if(currentIdentity&&loadedIdentity===currentIdentity)saveLocal(currentIdentity,updated);
+      return updated;
     });
   };
   const patchProfile=profile=>setData(d=>({...d,profile}));
