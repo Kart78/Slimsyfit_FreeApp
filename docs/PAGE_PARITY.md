@@ -9,13 +9,14 @@ The reference images supplied November 26, 2026 show the original mobile layout.
 | Hydration: large water ring, glass, minus/plus | `WaterView` | Original water drop and glass images; ring displaying cups out of eight; white controls with teal + | Decrement/increment one cup; local persistence; seven-day bar history |
 | Home latest results | `SlimsyHome` + `ColorMetrics` | Greeting, Today's Priority, Personal Plan, four pastel tiles, Today's Focus, three colored Weight/BMI/BMR cards | All tiles navigate; numbers come from real manual entries, not static examples |
 | Weight trend and history | `WeightView` | Original weight banner, three pastel metrics, teal SVG line chart, dated recent weigh-ins, log-weight field | Real weight input, full history, responsive chart, persistence |
-| Personal plan | `PlanView` | Teal tip banner, Breakfast/Lunch/Snacks/Dinner cards with original food imagery and times | Diet-specific meals and manual food logging CTA, no AI call |
+| Today's Menu (Nutrition tab) | `TrackScreen` + `MenuView` | Diet tabs, day totals, Breakfast/Lunch/Snacks/Dinner cards with diet-specific photos; tap to expand ingredients, steps, swaps | Dishes match original `shared/dietary-menu.js`; "Log this meal" adds approximate nutrition; own-meal form + food log |
+| Personal plan | `PlanView` | Daily goals, checklist, fasting routine, sleep log, Track-today links, 4-week program with current week | No meals on Plan; fasting timer opens from here |
 | Results and insights | `ResultsView` | Overview/Health Metrics/Achievements tabs; 1W/1M/3M/6M/1Y selectors; progress note, chart, colored metrics and progress bars | Date-filtered data; navigation; achievements from real weight check-ins |
 | Activity (original `ActivityTab`) | `ActivityView` | Live step counter, steps goal bar, daily-minutes goal badge, five animated quick-activity tiles | Foreground motion step counting, manual step entry, custom workouts, per-entry delete; Home tile and "Log Activity" open this page |
-| Results → Photos / Mood (original `ProgressPhotos`, `MoodTracker`) | `PhotosPanel`, `MoodPanel` | Photo grid with before/after compare; five-emoji mood, energy slider, note, 7-day chart | Photos are downscaled and kept on-device only (never synced); mood saves per day and syncs |
+| Results → Weekly / Photos | `WeeklyPanel`, `PhotosPanel` | 7-day tiles (water, activity, meals, sleep, steps, fasts) and day-by-day table; photo grid with before/after compare | Weekly is computed from real logs only; photos stay on-device. Mood tab removed at owner's request |
 | Milestone celebration (original `MilestoneCelebration`) | `MilestoneModal` | Milestone artwork, share button | Shows only when a new 10/20/…/100 badge is earned, not on reload |
 | Reminders (original `NotificationManager` + settings toggles) | `RemindersCard`, `useReminders` | Water / meal / daily check-in toggles in Settings | Same times as original; browser notifications while app is open |
-| Home summary and navigation | `SlimsyHome` + `App` | Home, Nutrition, Plan, Coach, Results navigation styled like original | All tabs work, Coach is **manual habits guidance**, without AI |
+| Home summary and navigation | `SlimsyHome` + `App` | Home, Nutrition, Plan, Results navigation (Coach removed — it was AI in the original) | Home = overall dashboard; Nutrition = meals only; Plan = routine; Results = all progress |
 
 ## Truthful data rendering
 

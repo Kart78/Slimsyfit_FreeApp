@@ -43,10 +43,28 @@ test("original-style Home, Hydration, Weight, Plan and Results pages remain func
  await page.screenshot({path:"test-results/"+test.info().project.name+"-weight-parity.png",fullPage:true});
  await page.getByRole("button",{name:"Back"}).click();
 
+ await page.getByRole("button",{name:"Nutrition",exact:true}).click();
+ await expect(page.getByRole("heading",{name:"Today's Menu"})).toBeVisible();
+ for(const meal of ["Breakfast","Lunch","Snacks","Dinner"])await expect(page.locator(".sf-meal-label b",{hasText:meal})).toBeVisible();
+ await expect(page.locator(".sf-meal img")).toHaveCount(4);
+ // Non-vegetarian dishes and diet-specific photos match the original SlimSyFit menu.
+ for(const dish of ["Egg avocado toast","Chicken quinoa salad","Greek yogurt and berries","Salmon vegetable rice bowl"])await expect(page.getByRole("heading",{name:dish})).toBeVisible();
+ await expect(page.locator(".sf-meal img").nth(2)).toHaveAttribute("src",/non-vegetarian-snacks/);
+ await page.getByRole("button",{name:/Breakfast/}).first().click();
+ await expect(page.getByRole("heading",{name:"Ingredients"})).toBeVisible();
+ await expect(page.getByText("2 eggs, scrambled or poached")).toBeVisible();
+ await page.getByRole("tab",{name:"Vegan"}).click();
+ for(const dish of ["Apple overnight oats","Chickpea spinach rice bowl","Edamame and pear","Ginger tofu quinoa bowl"])await expect(page.getByRole("heading",{name:dish})).toBeVisible();
+ await page.screenshot({path:"test-results/"+test.info().project.name+"-nutrition-menu.png",fullPage:true});
  await page.getByRole("button",{name:"Plan",exact:true}).click();
  await expect(page.getByRole("heading",{name:"Your Plan"})).toBeVisible();
- for(const meal of ["Breakfast","Lunch","Snacks","Dinner"])await expect(page.getByText(meal,{exact:true})).toBeVisible();
- await expect(page.locator(".sf-meal img")).toHaveCount(4);
+ await expect(page.locator(".sf-meal")).toHaveCount(0);
+ await expect(page.getByRole("heading",{name:"Your 4-week program"})).toBeVisible();
+ await page.getByRole("checkbox",{name:"Moved my body"}).check();
+ await expect(page.getByText("1/4 done")).toBeVisible();
+ await page.getByLabel("Hours slept").fill("7.5");
+ await page.getByRole("button",{name:"Save",exact:true}).click();
+ await expect(page.getByText("7.5 h")).toBeVisible();
  await page.screenshot({path:"test-results/"+test.info().project.name+"-plan-parity.png",fullPage:true});
  await page.getByRole("button",{name:"Results",exact:true}).click();
  await expect(page.getByRole("heading",{name:"Results & Insights"})).toBeVisible();
@@ -56,6 +74,9 @@ test("original-style Home, Hydration, Weight, Plan and Results pages remain func
  await expect(page.getByRole("heading",{name:"Your latest result"})).toBeVisible();
  await page.getByRole("tab",{name:/Achievements/}).click();
  await expect(page.getByText("My achievements")).toBeVisible();
+ await page.getByRole("tab",{name:/Weekly/}).click();
+ await expect(page.getByRole("heading",{name:"Day by day"})).toBeVisible();
+ await expect(page.getByRole("tab",{name:/Mood/})).toHaveCount(0);
  await page.getByRole("tab",{name:/Overview/}).click();
  await page.screenshot({path:"test-results/"+test.info().project.name+"-results-parity.png",fullPage:true});
  await expect.poll(async()=>page.evaluate(()=>{

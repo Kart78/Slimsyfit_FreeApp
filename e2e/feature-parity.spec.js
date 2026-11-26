@@ -7,7 +7,7 @@ const seed = (weights) => {
   return { days, today: day(0) };
 };
 
-test("Activity page, Mood, Photos, unit switch and milestone celebration work", async ({ page }) => {
+test("Activity page, Photos, unit switch and milestone celebration work", async ({ page }) => {
   const errors = []; page.on("pageerror", e => errors.push(e.message));
   const { days, today } = seed(9);
   await page.addInitScript(([days, today]) => {
@@ -39,19 +39,7 @@ test("Activity page, Mood, Photos, unit switch and milestone celebration work", 
   await page.getByRole("button", { name: "Back" }).click();
   await expect(page.locator(".original-tile").filter({ hasText: "Activity" })).toContainText("6,500 steps");
 
-  // Results: Mood tab persists today's entry.
   await page.getByRole("button", { name: "Results", exact: true }).click();
-  await page.getByRole("tab", { name: /Mood/ }).click();
-  await page.getByRole("radio", { name: /Great/ }).click();
-  await page.getByLabel("Note (optional)").fill("Slept well");
-  await page.getByRole("button", { name: "Save today's entry" }).click();
-  await expect(page.getByRole("button", { name: "✓ Saved!" })).toBeVisible();
-  await page.reload();
-  await page.getByRole("button", { name: "Results", exact: true }).click();
-  await page.getByRole("tab", { name: /Mood/ }).click();
-  await expect(page.getByRole("button", { name: "Update today's entry" })).toBeVisible();
-  await expect(page.getByLabel("Note (optional)")).toHaveValue("Slept well");
-
   // Results: Photos tab stores a downscaled image locally.
   await page.getByRole("tab", { name: /Photos/ }).click();
   const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg==", "base64");

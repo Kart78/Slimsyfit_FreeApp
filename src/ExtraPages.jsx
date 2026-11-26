@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Plus, Trash2, Camera, Footprints, Play, Square, X, Bell } from "lucide-react";
-import { activityMinutes, MOODS, moodHistory, reminderSchedule, safeNumber } from "./lib/tracker.js";
+import { activityMinutes, reminderSchedule, safeNumber } from "./lib/tracker.js";
 import "./extra-pages.css";
 
 const A = "/assets/slimsyfit";
@@ -11,7 +11,6 @@ const QUICK = [
   { label: "Strength", mins: 20, gif: "strength", bg: "#F3F1FF" },
   { label: "Stretching", mins: 10, gif: "stretching", bg: "#FDF0F5" }
 ];
-const dayLabel = date => new Date(date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short" });
 
 function Header({ title, subtitle, onBack }) {
   return <div className="sf-page-header">
@@ -170,30 +169,6 @@ export function PhotosPanel({ identity, latestWeight, unit }) {
       <img src={p.src} alt={"Progress photo " + fmt(p.date)}/><figcaption>{fmt(p.date)}{p.weight ? " · " + p.weight : ""}</figcaption>
       <button className="sf-icon-btn" aria-label="Delete photo" onClick={() => remove(p.id)}><Trash2 size={13}/></button></figure>)}</div>
     {!photos.length && <div className="sf-empty">No photos yet. Take one today to see your change over time.</div>}
-  </>;
-}
-
-/* ───────── Mood & energy check-in ───────── */
-export function MoodPanel({ data, today, updateDay }) {
-  const saved = data.days[today]?.mood;
-  const [mood, setMood] = useState(saved?.mood || 3), [energy, setEnergy] = useState(saved?.energy || 3), [note, setNote] = useState(saved?.note || ""), [ok, setOk] = useState(false);
-  const save = () => { updateDay(today, d => ({ ...d, mood: { mood, energy, note: note.trim().slice(0, 200) } })); setOk(true); setTimeout(() => setOk(false), 2000); };
-  const week = moodHistory(data, today, 7);
-  return <>
-    <div className="sf-card"><h3>How are you feeling today?</h3>
-      <div className="sf-moods" role="radiogroup" aria-label="Mood">{MOODS.map(m => <button key={m.v} role="radio" aria-checked={mood === m.v} className={mood === m.v ? "on" : ""} onClick={() => setMood(m.v)}>
-        <span>{m.emoji}</span><small>{m.label}</small></button>)}</div>
-      <label className="sf-range-label" htmlFor="sf-energy">Energy level <b>{energy}/5</b></label>
-      <input id="sf-energy" type="range" min="1" max="5" value={energy} onChange={e => setEnergy(Number(e.target.value))} className="sf-range"/>
-      <label className="sf-range-label" htmlFor="sf-mood-note">Note (optional)</label>
-      <textarea id="sf-mood-note" className="sf-textarea" rows={3} maxLength={200} value={note} placeholder="What influenced how you feel today?" onChange={e => setNote(e.target.value)}/>
-      <button className="sf-primary-action" onClick={save}>{ok ? "✓ Saved!" : saved ? "Update today's entry" : "Save today's entry"}</button>
-    </div>
-    <div className="sf-card"><h3>Last 7 days</h3>
-      <div className="sf-mood-week">{week.map(w => <div key={w.date}>
-        <span>{w.mood ? MOODS.find(m => m.v === w.mood.mood)?.emoji : "·"}</span>
-        <div className="sf-water-track"><div style={{ height: (w.mood ? w.mood.mood * 20 : 0) + "%" }}/></div><small>{dayLabel(w.date)}</small></div>)}</div>
-    </div>
   </>;
 }
 

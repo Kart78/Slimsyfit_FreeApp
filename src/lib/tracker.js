@@ -44,7 +44,7 @@ export function entryCount(data) {
 }
 export function dayHasEntry(d) {
   return Boolean(
-    (d?.waterMl || 0) > 0 || Number(d?.sleepHours) > 0 || Number(d?.steps) > 0 || d?.mood != null ||
+    (d?.waterMl || 0) > 0 || Number(d?.sleepHours) > 0 || Number(d?.steps) > 0 ||
     d?.weight != null || (d?.meals?.length || 0) > 0 ||
     (d?.activity?.length || 0) > 0 || Object.values(d?.habits || {}).some(Boolean)
   );
@@ -122,14 +122,6 @@ export function changeWeightUnit(data, to) {
 }
 export function activityMinutes(day) {
   return (day?.activity || []).reduce((n, a) => n + (Number(a.minutes) || 0), 0);
-}
-export const MOODS = [
-  { v: 1, emoji: "😞", label: "Bad" }, { v: 2, emoji: "😕", label: "Meh" },
-  { v: 3, emoji: "😐", label: "OK" }, { v: 4, emoji: "🙂", label: "Good" },
-  { v: 5, emoji: "😄", label: "Great" }
-];
-export function moodHistory(data, endDate, numDays = 7) {
-  return rangeDates(endDate, numDays).map(date => ({ date, mood: data.days[date]?.mood || null }));
 }
 /** Reminder schedule (local time) mirroring the original SlimSyFit notification times. */
 export function reminderSchedule(reminders = {}) {

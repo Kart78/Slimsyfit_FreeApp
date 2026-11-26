@@ -7,7 +7,6 @@ const FEATURE_IMAGES = {
   hydration: asset("/images/icons/water-drop.png?v=20261002-real4"),
   activity: asset("/images/activity/move-today.png"),
   weight: asset("/images/wellness/weight-bmi-bmr.png?v=20261002-plain-monitor"),
-  coach: asset("/images/coach/coach-ava.png"),
 };
 
 export default function PublicLandingPage({ onNew, onSignIn }) {
@@ -93,7 +92,6 @@ export default function PublicLandingPage({ onNew, onSignIn }) {
               <img src={FEATURE_IMAGES.hydration} alt="" />
               <img src={FEATURE_IMAGES.activity} alt="" />
               <img src={FEATURE_IMAGES.weight} alt="" />
-              <img src={FEATURE_IMAGES.coach} alt="" />
             </div>
             <button type="button" className="public-release-dismiss" onClick={dismissUpdate} aria-label="Dismiss update">×</button>
           </section>
@@ -191,16 +189,16 @@ export default function PublicLandingPage({ onNew, onSignIn }) {
           <article>
             <div className="public-story-visual visual-two">
               <div className="chat-card">
-                <img className="public-coach-avatar" src={FEATURE_IMAGES.coach} alt="" loading="lazy" decoding="async" />
-                <b>Daily Coach Tips</b>
-                <p>Keep building your healthy habits!</p>
-                <span>Meal guidance</span><span>Activity ideas</span><span>Motivation</span>
+                <img className="public-coach-avatar" src={asset("/images/nutrition/diet/vegetarian-breakfast.png")} alt="" loading="lazy" decoding="async" />
+                <b>Today's Menu</b>
+                <p>Breakfast, lunch, snacks and dinner — with recipes.</p>
+                <span>Vegan</span><span>Vegetarian</span><span>Non-veg</span>
               </div>
             </div>
             <div className="public-story-copy">
-              <span>Wellness Habits</span>
-              <h2>Guidance when you need it</h2>
-              <p>Use your personal goals and check-ins to build consistent daily wellness routines without AI.</p>
+              <span>Meal Plans</span>
+              <h2>Know what to eat today</h2>
+              <p>A daily menu for your diet with ingredients, simple steps and easy swaps — log any meal in one tap.</p>
             </div>
           </article>
 

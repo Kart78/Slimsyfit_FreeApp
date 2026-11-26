@@ -3,7 +3,8 @@ import {ArrowLeft,ArrowRight,Plus,Minus,ChevronRight,TrendingUp,Trophy,Check,Shi
 import {bmiValue,parseHeightCm,parseWeightKg,weightGoalProgress} from "./lib/metrics.js";
 import {earnedBadges,levelInfo,localDay,safeNumber,rangeDates} from "./lib/tracker.js";
 import "./wellness-pages.css";
-import {PhotosPanel,MoodPanel} from "./ExtraPages.jsx";
+import {PhotosPanel} from "./ExtraPages.jsx";
+import {WeeklyPanel} from "./MenuPage.jsx";
 const A="/assets/slimsyfit";
 const dateLabel=date=>new Date(date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"});
 const weightRows=data=>Object.entries(data.days).filter(([,d])=>d.weight!=null&&Number(d.weight)>0).sort((a,b)=>a[0].localeCompare(b[0]));
@@ -65,40 +66,47 @@ export function WeightView({data,today,onBack,updateDay}){
   <div className="sf-card"><h3>Log Weight</h3><div className="sf-inline-entry"><label htmlFor="sf-weight-log">Weight ({p.weightUnit})</label><input id="sf-weight-log" type="number" min="1" max="600" step=".1" value={value} onChange={e=>setValue(e.target.value)}/><button onClick={save} disabled={!(Number(value)>0&&Number(value)<=600)}><Plus size={15}/> Save</button></div><p className="sf-help">BMI is a screening measure. BMR needs an exact age and is shown only when available.</p></div>
  </div>;
 }
-const menus={
- "Non-vegetarian":[
- ["Breakfast","8:00 AM","Egg avocado toast","Eggs, avocado and whole-grain toast.","Eggs","/images/nutrition/diet/non-vegetarian-breakfast.png"],
- ["Lunch","12:00 PM","Chicken quinoa salad","Grilled chicken, quinoa, cucumber, tomato and leafy greens.","Chicken","/images/nutrition/lunch-chicken-quinoa-salad.png"],
- ["Snacks","3:30 PM","Greek yogurt and berries","Plain Greek yogurt with fresh berries.","Yogurt","/images/nutrition/breakfast-yogurt-berry-bowl.png"],
- ["Dinner","6:00 PM","Salmon vegetable rice bowl","Salmon, broccoli, carrots and brown rice.","Salmon","/images/nutrition/dinner-grilled-salmon-veggies.png"]
- ],
- Vegetarian:[
- ["Breakfast","8:00 AM","Yogurt berry bowl","Yogurt, fruit and nuts.","Yogurt","/images/nutrition/diet/vegetarian-breakfast.png"],
- ["Lunch","12:00 PM","Quinoa and chickpea salad","Quinoa, chickpeas, greens.","Chickpeas","/images/nutrition/diet/vegetarian-lunch.png"],
- ["Snacks","3:30 PM","Fruit and nuts","Fresh fruit and nuts.","Nuts","/images/nutrition/diet/vegetarian-snacks.png"],
- ["Dinner","6:00 PM","Vegetable paneer bowl","Paneer, vegetables and rice.","Paneer","/images/nutrition/diet/vegetarian-dinner.png"]
- ],
- Vegan:[
- ["Breakfast","8:00 AM","Fruit oat bowl","Oats, fruit and chia seeds.","Seeds","/images/nutrition/diet/vegan-breakfast.png"],
- ["Lunch","12:00 PM","Lentil grain salad","Lentils, grains, and greens.","Lentils","/images/nutrition/diet/vegan-lunch.png"],
- ["Snacks","3:30 PM","Fruit and nuts","Fresh fruit and nuts.","Nuts","/images/nutrition/diet/vegan-snacks.png"],
- ["Dinner","6:00 PM","Tofu vegetable rice bowl","Tofu, fresh greens and rice.","Tofu","/images/nutrition/diet/vegan-dinner.png"]
- ]
-};
-export function PlanView({data,onBack,onTrack}){
- const diet=data.profile.diet==="Vegan"?"Vegan":data.profile.diet==="Vegetarian"?"Vegetarian":"Non-vegetarian";
- const icons=["☀️","☼","🍎","☾"];
- return <div className="sf-detail sf-menu"><Header title="Your Plan" onBack={onBack}/>
-  <div className="sf-coach-banner"><div><b>Your wellness guide</b><p>Fuel your body with real, whole foods.<br/>Stay consistent, see the change. 💚</p></div><span>❧</span></div>
-  <h3 className="sf-menu-title">Today's Menu</h3><p className="sf-muted">{diet}</p><p className="sf-help">Illustrative meal ideas. Adjust portions and ingredients for your needs and allergies; these are not prescribed nutrition targets.</p>
-  <div className="sf-menu-list">{menus[diet].map(([type,time,name,description,protein,img],i)=><article className="sf-meal" key={type}>
-   <div><div className="sf-meal-label"><span>{icons[i]}</span><div><b>{type}</b><small>◉ {time}</small></div></div><h4>{name}</h4><p className="sf-meal-protein">Protein: {protein}</p><p>{description}</p><span className="sf-diet-chip">♧ {diet}</span></div><img src={A+img} alt={name}/></article>)}</div>
-  <button className="sf-primary-action" onClick={onTrack}>Log meals manually <ArrowRight size={16}/></button>
-  <div className="sf-card"><h3>Your 4-week routine</h3>{["Start with awareness","Build consistency","Move and recover","Make it a lifestyle"].map((s,i)=><div className="sf-history-row" key={s}><span>Week {i+1}</span><strong>{s}</strong></div>)}</div>
+const PROGRAM=[
+ ["Begin with awareness","Log every meal, glass of water and night of sleep. Don't change anything yet — just notice your patterns."],
+ ["Build a rhythm","Eat at regular times, hit your water goal most days and add a 10-minute walk after one meal."],
+ ["Strengthen consistency","Reach your activity goal 4+ days, try your fasting window if it suits you and weigh in twice a week."],
+ ["Make it a lifestyle","Review your weekly results, keep what works and adjust goals for the month ahead."]
+];
+const HABITS=[["nutrition","Ate balanced meals"],["water","Reached my water goal"],["movement","Moved my body"],["sleep","Kept my sleep routine"]];
+export function PlanView({data,today,updateDay,onFasting,onWater,onActivity,onWeight,onSettings}){
+ const p=data.profile,day=data.days[today]||{},habits=day.habits||{};
+ const first=Object.keys(data.days).sort()[0]||today;
+ const week=Math.min(4,Math.floor((new Date(today+"T12:00:00")-new Date(first+"T12:00:00"))/(7*864e5))+1);
+ const [sleep,setSleep]=useState(day.sleepHours??"");
+ useEffect(()=>setSleep(day.sleepHours??""),[today,day.sleepHours]);
+ const fastingOk=p.fastingAllowed!==false,fh=Number(p.fastingHours)||12;
+ const goals=[["💧","Water",(waterGoal(p)/1000).toFixed(1)+" L / day"],["🚶","Activity",(p.activityGoal||30)+" min / day"],["👟","Steps",(p.stepGoal||8000).toLocaleString()+" / day"],["🌙","Sleep",(p.sleepGoal||8)+" hours"]];
+ const done=HABITS.filter(([k])=>habits[k]).length;
+ return <div className="sf-detail"><Header title="Your Plan" subtitle={"Week "+week+" of your 4-week program"}/>
+  <div className="sf-coach-banner"><div><b>Your daily routine</b><p>Small, repeatable habits build lasting change.<br/>Here's what today looks like. 💚</p></div><span>❧</span></div>
+  <div className="sf-card"><div className="sf-heading-row"><h3>Daily goals</h3><button onClick={onSettings}>Edit</button></div>
+   <div className="sf-plan-goals">{goals.map(([i,l,v])=><div className="sf-plan-goal" key={l}><span>{i}</span><small>{l}</small><strong>{v}</strong></div>)}</div></div>
+  <div className="sf-card"><div className="sf-heading-row"><h3>Today's checklist</h3><span className="sf-green-chip">{done}/4 done</span></div>
+   {HABITS.map(([k,label])=><label key={k} className={"sf-check-row"+(habits[k]?" done":"")}><input type="checkbox" checked={Boolean(habits[k])}
+     onChange={e=>updateDay(today,d=>({...d,habits:{...(d.habits||{}),[k]:e.target.checked}}))}/>{label}</label>)}</div>
+  <div className="sf-card"><div className="sf-heading-row"><h3>⏱️ Fasting routine</h3><span className="sf-green-chip">{fastingOk?fh+":"+(24-fh):"Paused"}</span></div>
+   <p className="sf-muted">{fastingOk?"Optional. Fast "+fh+" hours, eat within a "+(24-fh)+"-hour window. Stop if you feel unwell.":"Based on your safety answers, check with your clinician before fasting."}</p>
+   <button className="sf-primary-action" disabled={!fastingOk} onClick={onFasting}>{data.fasting.activeStart?"View active fast":"Open fasting timer"} <ArrowRight size={16}/></button></div>
+  <div className="sf-card"><div className="sf-heading-row"><h3>🌙 Sleep last night</h3><span className="sf-green-chip">{day.sleepHours!=null?day.sleepHours+" h":"Not logged"}</span></div>
+   <div className="sf-inline-entry"><label htmlFor="sf-sleep">Hours slept</label><input id="sf-sleep" type="number" min="0" max="24" step=".25" value={sleep} placeholder="7.5" onChange={e=>setSleep(e.target.value)}/>
+    <button disabled={safeNumber(sleep,24)===null} onClick={()=>{const n=safeNumber(sleep,24);if(n!==null)updateDay(today,d=>({...d,sleepHours:n}))}}>Save</button></div>
+   <p className="sf-help">Your goal is {p.sleepGoal||8} hours.</p></div>
+  <div className="sf-card"><h3>Track today</h3><div className="sf-link-grid">
+   <button onClick={onWater}><img src={A+"/images/icons/water-drop.png"} alt=""/>Hydration</button>
+   <button onClick={onActivity}><img src={A+"/images/activity/move-today.png"} alt=""/>Activity</button>
+   <button onClick={onWeight}><img src={A+"/images/icons/scale.png"} alt=""/>Weight</button></div></div>
+  <div className="sf-card"><h3>Your 4-week program</h3>{PROGRAM.map(([t,d],i)=><div key={t} className={"sf-week-step"+(i+1===week?" current":"")}>
+   <b>W{i+1}</b><div><h4>{t} {i+1===week&&<em>· THIS WEEK</em>}</h4><p>{d}</p></div></div>)}</div>
+  <p className="sf-help">General wellness guidance, not a medical plan. Your meal plan lives in the Nutrition tab.</p>
  </div>;
 }
 const ranges=[["1W",7],["1M",30],["3M",90],["6M",180],["1Y",365]];
-export function ResultsView({data,today,onWeight,onTrack,onActivity,identity,updateDay}){
+export function ResultsView({data,today,onWeight,onTrack,onActivity,onWater,identity}){
  const [section,setSection]=useState("Overview"),[range,setRange]=useState("3M");
  const p=data.profile,all=weightRows(data),days=ranges.find(x=>x[0]===range)?.[1]||90,from=new Date(today+"T12:00:00");from.setDate(from.getDate()-days+1);
  const selected=all.filter(([date])=>date>=localDay(from)&&date<=today);const latest=latestWeight(data),first=all[0]?.[1].weight??null;
@@ -108,7 +116,7 @@ export function ResultsView({data,today,onWeight,onTrack,onActivity,identity,upd
  const progressNote=all.length<2?"Log your weight on a few different days to see your trend.":towardGoal!=null&&towardGoal>0?towardGoal+"% of the way to your goal weight.":diff===0?"Your weight is steady across your recorded weigh-ins.":"Your trend is based on "+all.length+" real weigh-ins.";
  const measures=[["Nutrition",day.meals?.length||0,4,"/images/nutrition/front-plan-bowl.png","meals"],["Hydration",day.waterMl||0,waterGoal(p),"/images/icons/water-drop.png","ml"],["Activity",(day.activity||[]).reduce((s,v)=>s+(Number(v.minutes)||0),0),p.activityGoal||30,"/images/activity/move-today.png","min"]];
  return <div className="sf-detail sf-results"><Header title="Results & Insights"/>
-  <div className="sf-result-tabs" role="tablist">{["Overview","Health Metrics","Achievements","Photos","Mood"].map(t=><button key={t} role="tab" aria-selected={section===t} className={section===t?"active":""} onClick={()=>setSection(t)}>{({"Overview":"↗ ","Health Metrics":"♡ ","Achievements":"♜ ","Photos":"◫ ","Mood":"☺ "})[t]}{t}</button>)}</div>
+  <div className="sf-result-tabs" role="tablist">{["Overview","Health Metrics","Achievements","Weekly","Photos"].map(t=><button key={t} role="tab" aria-selected={section===t} className={section===t?"active":""} onClick={()=>setSection(t)}>{({"Overview":"↗ ","Health Metrics":"♡ ","Achievements":"♜ ","Weekly":"▦ ","Photos":"◫ "})[t]}{t}</button>)}</div>
   {section==="Overview"&&<>
    <div className="sf-overview-note"><TrendingUp size={19}/><div><b>Your Progress</b><small>{progressNote}</small></div></div>
    <div className="sf-range-tabs">{ranges.map(([label])=><button key={label} className={range===label?"active":""} onClick={()=>setRange(label)}>{label}</button>)}</div>
@@ -116,7 +124,7 @@ export function ResultsView({data,today,onWeight,onTrack,onActivity,identity,upd
     <WeightLine records={selected} unit={p.weightUnit} height={180}/><p className="sf-help">{selected.length} measurements in the selected {range} range.</p></div>
    {all.length>=2&&<div className="sf-overview-note"><Trophy size={18}/><div><b>{all.length} weigh-ins recorded</b><small>Keep it up. Small, consistent changes lead to better results.</small></div></div>}
    <div className="sf-card"><ColorMetrics data={data}/></div>
-   <div className="sf-card">{measures.map(([name,value,max,img,units])=><button className="sf-result-progress" key={name} onClick={name==="Activity"&&onActivity?onActivity:onTrack}>
+   <div className="sf-card">{measures.map(([name,value,max,img,units])=><button className="sf-result-progress" key={name} onClick={name==="Activity"&&onActivity?onActivity:name==="Hydration"&&onWater?onWater:onTrack}>
     <img src={A+img} alt=""/><div><b>{name}</b><small>{value?value+" "+units:"Not logged"}</small></div>
     <div className="sf-mini-progress"><span style={{width:Math.min(100,value/Math.max(1,max)*100)+"%"}}/></div><strong>{Math.round(value/Math.max(1,max)*100)}%</strong></button>)}</div>
    <div className="sf-card"><div className="sf-heading-row"><h3>Recent weigh-ins</h3><button onClick={onWeight}>View all</button></div>
@@ -129,6 +137,6 @@ export function ResultsView({data,today,onWeight,onTrack,onActivity,identity,upd
    <div className="sf-card"><h3>My achievements</h3>{Array.from({length:10},(_,i)=>(i+1)*10).map(n=><div key={n} className={"sf-award"+(badges.some(b=>b.count===n)?"":" locked")}>
     <img src={A+"/milestones/milestone-"+n+(n===10?".png":".jpg")} alt=""/><div><b>{n} entries</b><small>{badges.some(b=>b.count===n)?"Unlocked!":"Locked — keep tracking"}</small></div>{badges.some(b=>b.count===n)?<Check size={17}/>:<ShieldCheck size={16}/>}</div>)}</div></>}
   {section==="Photos"&&<PhotosPanel identity={identity} latestWeight={latest} unit={p.weightUnit}/>}
-  {section==="Mood"&&updateDay&&<MoodPanel data={data} today={today} updateDay={updateDay}/>}
+  {section==="Weekly"&&<WeeklyPanel data={data} today={today}/>}
  </div>;
 }

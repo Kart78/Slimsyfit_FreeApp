@@ -41,7 +41,7 @@ test("values are bounded and future dates do not duplicate", () => {
   assert.equal(rangeDates("2026-11-26",7).length,7);
   assert.equal(new Set(rangeDates("2026-11-26",7)).size,7);
 });
-import { convertWeight, convertWeightText, changeWeightUnit, reminderSchedule, dayHasEntry, normalizeData, moodHistory } from "../src/lib/tracker.js";
+import { convertWeight, convertWeightText, changeWeightUnit, reminderSchedule, dayHasEntry, normalizeData } from "../src/lib/tracker.js";
 test("weight unit conversion rounds to 0.1 and rejects invalid values", () => {
   assert.equal(convertWeight(80, "kg", "lbs"), 176.4);
   assert.equal(convertWeight(176.4, "lbs", "kg"), 80);
@@ -67,16 +67,29 @@ test("reminder schedule follows toggles", () => {
   assert.equal(reminderSchedule({ water: true }).length, 6);
   assert.equal(reminderSchedule({ meals: true, checkin: true }).length, 4);
 });
-test("steps and mood count as real entries; old data gains reminder defaults", () => {
+test("steps count as real entries; old data gains reminder defaults", () => {
   assert.equal(dayHasEntry({ steps: 1200 }), true);
-  assert.equal(dayHasEntry({ mood: { mood: 4, energy: 3 } }), true);
   assert.equal(dayHasEntry({ steps: 0 }), false);
   const n = normalizeData({ profile: { name: "A" } });
   assert.deepEqual(n.profile.reminders, { water: false, meals: false, checkin: false });
   assert.equal(n.profile.stepGoal, 8000);
 });
-test("mood history returns one slot per day", () => {
-  const d = createEmptyData(); d.days["2026-11-26"] = { mood: { mood: 5 } };
-  const h = moodHistory(d, "2026-11-26", 7);
-  assert.equal(h.length, 7); assert.equal(h[6].mood.mood, 5); assert.equal(h[0].mood, null);
+import { MENUS, menuFor, menuTotals, logType } from "../src/lib/menu.js";
+test("menu matches original dishes, has detail, and macros add up", () => {
+  assert.deepEqual(Object.keys(MENUS), ["Non-vegetarian", "Vegetarian", "Vegan"]);
+  assert.equal(menuFor("Vegan")[0].title, "Apple overnight oats");
+  assert.equal(menuFor("Any")[0].title, "Egg avocado toast");
+  for (const [diet, meals] of Object.entries(MENUS)) {
+    assert.deepEqual(meals.map(m => m.meal), ["Breakfast", "Lunch", "Snacks", "Dinner"]);
+    for (const m of meals) {
+      assert.ok(m.image.includes(diet.toLowerCase() + "-" + m.meal.toLowerCase()), m.title + " uses its own diet photo");
+      assert.ok(m.ingredients.length >= 2 && m.steps.length >= 2 && m.swaps.length >= 2, m.title + " is detailed");
+      const { calories, protein, carbs, fat } = m.nutrition;
+      const est = protein * 4 + carbs * 4 + fat * 9;
+      assert.ok(Math.abs(est - calories) / calories < 0.12, m.title + " calories consistent with macros");
+    }
+    const t = menuTotals(meals).calories;
+    assert.ok(t >= 1200 && t <= 1800, diet + " day total " + t);
+  }
+  assert.equal(logType("Snacks"), "Snack");
 });

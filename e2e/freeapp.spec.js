@@ -52,15 +52,21 @@ test("original landing -> 18 survey questions -> local dashboard -> saved tracki
   await expect(page.getByRole("heading",{name:"Nutrition"})).toBeVisible();
   await page.getByRole("button",{name:"Nutrition",exact:true}).last().click();
   await expect(page.getByRole("heading",{name:"Nutrition",exact:true})).toBeVisible();
-  await page.getByRole("button",{name:/250/}).last().click();
-  await expect(page.getByText("250", {exact:false}).first()).toBeVisible();
+  // Nutrition is meals only: menu + food log, no hydration/sleep/weight/activity cards.
+  await expect(page.getByRole("heading",{name:"Today's Menu"})).toBeVisible();
+  for(const gone of ["💧 Hydration","🌙 Sleep","⚖️ Weight","🚶 Activity","✅ Daily commitment"])
+    await expect(page.getByRole("heading",{name:gone})).toHaveCount(0);
+  await page.getByRole("button",{name:"Log this meal"}).first().click();
+  await expect(page.getByRole("button",{name:"Logged"})).toHaveCount(1);
   await page.reload();
   await expect(page.getByText("TODAY’S PRIORITY")).toBeVisible();
   await page.getByRole("button",{name:"Nutrition",exact:true}).last().click();
-  await expect(page.getByText("250", {exact:false}).first()).toBeVisible();
-  await page.getByRole("button",{name:"Coach",exact:true}).click();
-  await expect(page.getByRole("heading",{name:"Healthy habits"})).toBeVisible();
-  await page.getByRole("button",{name:"Open fasting timer"}).click();
-  await expect(page.getByRole("heading",{name:"Fasting",exact:true})).toBeVisible();
+  await expect(page.getByRole("button",{name:"Logged"})).toHaveCount(1);
+  // Coach tab is gone; fasting lives in Plan.
+  await expect(page.getByRole("button",{name:"Coach",exact:true})).toHaveCount(0);
+  await expect(page.locator(".navitem")).toHaveCount(4);
+  await page.getByRole("button",{name:"Plan",exact:true}).click();
+  await page.getByRole("button",{name:/Open fasting timer/}).click();
+  await expect(page.getByRole("heading",{name:"Fasting timer",exact:true})).toBeVisible();
   expect(errors).toEqual([]);
 });
