@@ -18,9 +18,9 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
-          name: freeapp-browser-failure
+          name: freeapp-browser-qa
           path: |
             test-results/
             playwright-report/
