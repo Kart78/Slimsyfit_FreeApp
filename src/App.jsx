@@ -620,7 +620,9 @@ function MeScreen({ data, identity, session, onProfile, onSignOut, onReset, onCo
 export default function App() {
   const [session,setSession] = useState(null);
   const [sessionReady,setSessionReady] = useState(!supabase);
-  const [guestMode,setGuestMode] = useState(false);
+  const [guestMode,setGuestMode] = useState(() => {
+    try{return localStorage.getItem("slimsyfit-freeapp:guest-active")==="1"}catch{return false}
+  });
   const [showSurvey,setShowSurvey] = useState(false);
   const [showLogin,setShowLogin] = useState(false);
   const [cloudWritable,setCloudWritable] = useState(true);
@@ -650,7 +652,10 @@ export default function App() {
       if(event==="PASSWORD_RECOVERY")setPasswordRecovery(true);
       if(event==="SIGNED_OUT"){setDataReady(false);setLoadedIdentity(null)}
       setSession(s||null);setSessionReady(true);
-      if(s?.user)setGuestMode(false);
+      if(s?.user){
+        setGuestMode(false);
+        try{localStorage.removeItem("slimsyfit-freeapp:guest-active")}catch{}
+      }
     });
     return ()=>{live=false;subscription.unsubscribe()};
   },[]);
@@ -752,6 +757,7 @@ export default function App() {
   const signOut=async()=>{
     if(supabase&&session) await supabase.auth.signOut();
     setSession(null);setGuestMode(false);setDataReady(false);setLoadedIdentity(null);
+    try{localStorage.removeItem("slimsyfit-freeapp:guest-active")}catch{}
     setShowLogin(false);setShowSurvey(false);setShowPlan(false);setCloudWritable(false);
   };
   if(passwordRecovery)return <ResetPasswordScreen onDone={()=>{
@@ -760,9 +766,15 @@ export default function App() {
   }}/>;
   if(!sessionReady)return <div className="authscreen"><div className="logo"><Leaf/></div><h2>Loading FreeApp…</h2></div>;
   if(!currentIdentity) return showLogin
-    ? <AuthLanding enterLocal={()=>{setGuestMode(true);setShowSurvey(!loadLocal("guest").profile.name);setShowLogin(false)}}/>
+    ? <AuthLanding enterLocal={()=>{
+        try{localStorage.setItem("slimsyfit-freeapp:guest-active","1")}catch{}
+        setGuestMode(true);setShowSurvey(!loadLocal("guest").profile.name);setShowLogin(false);
+      }}/>
     : <PublicLandingPage
-        onNew={()=>{setGuestMode(true);setShowSurvey(true)}}
+        onNew={()=>{
+          try{localStorage.setItem("slimsyfit-freeapp:guest-active","1")}catch{}
+          setGuestMode(true);setShowSurvey(true);
+        }}
         onSignIn={()=>setShowLogin(true)}/>;
   if(!dataReady)return <div className="authscreen"><div className="logo"><Leaf/></div><h2>Restoring your tracker…</h2></div>;
   if(showSurvey||!data.profile.name)return <div className="shell"><SurveyFlow
@@ -771,6 +783,7 @@ export default function App() {
     onBack={()=>{
       if(!data.profile.name){
         setGuestMode(false);setShowLogin(false);setShowSurvey(false);
+        try{localStorage.removeItem("slimsyfit-freeapp:guest-active")}catch{}
       }else setShowSurvey(false);
     }}
     onComplete={(answers,name)=>{
@@ -808,6 +821,7 @@ export default function App() {
           try{sessionStorage.setItem("freeapp:guest-transfer",JSON.stringify(data))}catch{}
           saveLocal("guest",data);
           setGuestMode(false);setShowSurvey(false);setShowLogin(true);
+          try{localStorage.removeItem("slimsyfit-freeapp:guest-active")}catch{}
         }}/>}
     {syncError && <div className="error" role="status" style={{margin:"0 20px 12px"}}>{syncError}</div>}
     <div className="navwrap"><nav className="navbar" aria-label="Main navigation">
