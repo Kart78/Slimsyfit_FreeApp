@@ -6,6 +6,10 @@ import {
   Sparkles, Sunrise, Target, Trash2, TrendingUp, UtensilsCrossed
 } from "lucide-react";
 import { supabase, isCloudConfigured, googleLogin, emailSignIn, emailSignUp } from "./lib/supabase.js";
+import PublicLandingPage from "./PublicLandingPage.jsx";
+import SurveyFlow from "./SurveyFlow.jsx";
+import SlimsyHome from "./SlimsyHome.jsx";
+import "./public-landing.css";
 import {
   blankDay, createEmptyData, earnedBadges, entryCount, levelInfo, loadLocal,
   localDay, normalizeData, rangeDates, safeMl, safeNumber, saveLocal, toClock, weeklyWaterMl
@@ -13,10 +17,10 @@ import {
 
 const NAV = [
   { id: "home", label: "Home", Icon: Home },
-  { id: "track", label: "Track", Icon: Droplets },
+  { id: "track", label: "Nutrition", Icon: Activity },
+  { id: "plan", label: "Plan", Icon: CalendarDays },
   { id: "fasting", label: "Fasting", Icon: Clock3 },
-  { id: "progress", label: "Progress", Icon: TrendingUp },
-  { id: "me", label: "Me", Icon: CircleUserRound }
+  { id: "progress", label: "Results", Icon: TrendingUp }
 ];
 const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
 const MOVES = ["Walking", "Running", "Cycling", "Yoga", "Strength", "Other"];
@@ -516,6 +520,8 @@ export default function App() {
   const [session,setSession] = useState(null);
   const [sessionReady,setSessionReady] = useState(!supabase);
   const [guestMode,setGuestMode] = useState(false);
+  const [showSurvey,setShowSurvey] = useState(false);
+  const [showLogin,setShowLogin] = useState(false);
   const [data,setData] = useState(createEmptyData);
   const [dataReady,setDataReady] = useState(false);
   const [tab,setTab] = useState("home");
@@ -625,12 +631,41 @@ export default function App() {
     setSession(null);setGuestMode(false);setDataReady(false);
   };
   if(!sessionReady)return <div className="authscreen"><div className="logo"><Leaf/></div><h2>Loading FreeApp…</h2></div>;
-  if(!currentIdentity)return <AuthLanding enterLocal={()=>setGuestMode(true)}/>;
+  if(!currentIdentity) return showLogin
+    ? <AuthLanding enterLocal={()=>{setGuestMode(true);setShowSurvey(true);setShowLogin(false)}}/>
+    : <PublicLandingPage
+        onNew={()=>{setGuestMode(true);setShowSurvey(true)}}
+        onSignIn={()=>setShowLogin(true)}/>;
   if(!dataReady)return <div className="authscreen"><div className="logo"><Leaf/></div><h2>Restoring your tracker…</h2></div>;
-  if(!data.profile.name)return <div className="shell"><Onboard original={data.profile} onSave={patchProfile}/></div>;
+  if(showSurvey||!data.profile.name)return <div className="shell"><SurveyFlow
+    initialAnswers={data.profile.surveyAnswers||{}}
+    initialName={data.profile.name||session?.user?.user_metadata?.full_name||""}
+    onBack={()=>{
+      if(!data.profile.name){
+        setGuestMode(false);setShowLogin(false);setShowSurvey(false);
+      }else setShowSurvey(false);
+    }}
+    onComplete={(answers,name)=>{
+      const needsReview=answers.medicalSafety&&answers.medicalSafety!=="None of these apply";
+      const fastingChoice=Number(String(answers.fastingWindow||"12:12").split(":")[0])||12;
+      const weightUnit=String(answers.currentWeight||"").includes("kg")?"kg":"lbs";
+      setData(prev=>({...prev,profile:{
+        ...prev.profile,name,age:answers.age||"",gender:answers.gender||"",
+        goal:answers.goal||"",diet:answers.diet||"Any",activity:answers.activity||"",
+        bodyType:answers.bodyType||"",targetBody:answers.targetBody||"",
+        currentWeight:answers.currentWeight||"",targetWeight:answers.targetWeight||"",
+        height:answers.height||"",sleepPreference:answers.sleep||"",
+        waterPreference:answers.water||"",fastingExperience:answers.fastingExp||"",
+        fastingAllowed:!needsReview,fastingHours:needsReview?12:fastingChoice,
+        weightUnit, surveyAnswers:answers
+      }}));
+      setShowSurvey(false);setTab("home");
+    }}
+  /></div>;
   return <div className="shell">
-    {showPlan?<PlanScreen data={data} onBack={()=>setShowPlan(false)}/>:
-      tab==="home"?<HomeScreen data={data} today={today} setTab={setTab} addWater={addWater} showPlan={()=>setShowPlan(true)}/>:
+    {showPlan?<PlanScreen data={data} onBack={()=>{setShowPlan(false);setTab("home")}}/>:
+      tab==="home"?<SlimsyHome data={data} today={today} setTab={setTab} addWater={addWater}
+        onOpenPlan={()=>setShowPlan(true)} onOpenSettings={()=>setTab("me")}/>:
       tab==="track"?<TrackScreen data={data} date={date} onDate={setDate} updateDay={updateDay}/>:
       tab==="fasting"?<FastingScreen data={data} now={now} onStart={startFasting} onFinish={finishFasting}
         onHoursChange={h=>setData(d=>({...d,profile:{...d.profile,fastingHours:h}}))}/>:
@@ -640,7 +675,7 @@ export default function App() {
     {syncError && <div className="error" role="status" style={{margin:"0 20px 12px"}}>{syncError}</div>}
     {!showPlan&&<div className="navwrap"><nav className="navbar" aria-label="Main navigation">
       {NAV.map(({id,label,Icon})=><button type="button" key={id} className={"navitem"+(tab===id?" on":"")}
-        onClick={()=>{setTab(id);window.scrollTo(0,0)}}><Icon size={22}/><span>{label}</span></button>)}
+        onClick={()=>{if(id==="plan")setShowPlan(true);else{setShowPlan(false);setTab(id)}window.scrollTo(0,0)}}><Icon size={22}/><span>{label}</span></button>)}
     </nav></div>}
   </div>;
 }
