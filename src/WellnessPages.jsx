@@ -9,7 +9,7 @@ const weightRows=data=>Object.entries(data.days).filter(([,d])=>d.weight!=null&&
 const latestWeight=data=>weightRows(data).at(-1)?.[1].weight??null;
 const displayWeight=(w,p)=>w==null?"—":Number(w)+" "+(p.weightUnit||"lbs");
 const waterGoal=p=>Math.max(250,Number(p.waterGoalMl)||2000);
-function Header({title,subtitle,onBack}){return <div className="sf-page-header">{onBack&&<button aria-label="Back" className="sf-back" onClick={onBack}><ArrowLeft size={18}/></button>}<div><h1>{title}</h1>{subtitle&&<small>{subtitle}</small>}</div></div>}
+function Header({title,subtitle,onBack,action}){return <div className="sf-page-header">{onBack&&<button aria-label="Back" className="sf-back" onClick={onBack}><ArrowLeft size={18}/></button>}<div><h1>{title}</h1>{subtitle&&<small>{subtitle}</small>}</div>{action||null}</div>}
 export function ColorMetrics({data}){
  const p=data.profile,w=latestWeight(data),bmi=bmiValue(p.height||p.heightCm,w,p.weightUnit);
  const age=Number(p.exactAge),h=parseHeightCm(p.height||p.heightCm),kg=parseWeightKg(w,p.weightUnit),sex=p.gender;
@@ -56,7 +56,7 @@ export function WeightView({data,today,onBack,updateDay}){
  const p=data.profile,rows=weightRows(data),newest=latestWeight(data);const [value,setValue]=useState(newest==null?"":String(newest)),[showAll,setShowAll]=useState(false);
  useEffect(()=>setValue(newest==null?"":String(newest)),[newest]);
  const save=()=>{const n=safeNumber(value,600);if(n!==null&&n>0)updateDay(today,d=>({...d,weight:n}));};
- return <div className="sf-detail"><Header title="Weight & Progress" subtitle={rows.length+" weigh-ins logged"} onBack={onBack}/>
+ return <div className="sf-detail"><Header title="Weight & Progress" subtitle={rows.length+" weigh-ins logged"} onBack={onBack} action={<button type="button" className="sf-log-shortcut" onClick={()=>document.getElementById("sf-weight-log")?.scrollIntoView({behavior:"smooth",block:"center"})}><Plus size={13}/> Log Weight</button>}/>
   <img className="sf-weight-banner" src={A+"/images/wellness/weight-bmi-bmr.png"} alt="Wellness scale"/>
   <div className="sf-card"><h3>Your latest result</h3><ColorMetrics data={data}/></div>
   <div className="sf-card"><div className="sf-heading-row"><h3>Weight Trend</h3><button onClick={()=>setShowAll(!showAll)}>{showAll?"Show less":"Full history"}</button></div><WeightLine records={showAll?rows:rows.slice(-8)} unit={p.weightUnit}/></div>
