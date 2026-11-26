@@ -105,7 +105,7 @@ export default function PublicLandingPage({ onNew, onSignIn }) {
             <h1>Build a Healthier You, Your Way</h1>
             <p>Personalized daily tracking for nutrition, activity, hydration, progress, and healthier everyday habits — free, with no AI.</p>
             <div className="public-hero-actions">
-              <a className="public-play-cta" href={GOOGLE_PLAY_URL} target="_blank" rel="noopener noreferrer">
+              <a className="public-play-cta" href="#start-free" onClick={e=>{e.preventDefault();onNew()}}>
                 <Download size={20} /> Start free
               </a>
               <button type="button" className="public-secondary-cta" onClick={onNew}>Build my plan</button>
@@ -226,7 +226,7 @@ export default function PublicLandingPage({ onNew, onSignIn }) {
             <div><em>2</em><h3>View your free plan</h3><p>See a clear, non-AI habit plan based on your survey answers.</p></div>
             <div><em>3</em><h3>Track and stay consistent</h3><p>Follow your progress and keep healthy habits moving forward.</p></div>
           </div>
-          <a className="public-play-cta center" href={GOOGLE_PLAY_URL} target="_blank" rel="noopener noreferrer">
+          <a className="public-play-cta center" href="#start-free" onClick={e=>{e.preventDefault();onNew()}}>
             <Download size={20} /> Start SlimSyFit FreeApp
           </a>
         </section>
@@ -234,7 +234,7 @@ export default function PublicLandingPage({ onNew, onSignIn }) {
         <section className="public-final-cta">
           <h2>Your Journey. Your Way.</h2>
           <p>Start building healthier habits today with personalized, manual wellness tracking.</p>
-          <a className="public-play-cta" href={GOOGLE_PLAY_URL} target="_blank" rel="noopener noreferrer">
+          <a className="public-play-cta" href="#start-free" onClick={e=>{e.preventDefault();onNew()}}>
             <Download size={20} /> Start free
           </a>
         </section>
