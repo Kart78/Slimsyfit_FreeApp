@@ -65,5 +65,15 @@ jobs:
           git add public/assets/slimsyfit assets/import-report.txt
           if ! git diff --cached --quiet; then
             git commit -m "Import exact original SlimSyFit images and GIFs into independent FreeApp"
-            git push
+            for attempt in 1 2 3 4; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                echo "Assets committed to the separate FreeApp repository."
+                exit 0
+              fi
+              echo "Main branch updated during import; retrying attempt $attempt"
+            done
+            echo "Unable to push imported assets after retries"
+            exit 1
           fi
