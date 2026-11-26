@@ -267,6 +267,12 @@ function TrackScreen({ data, date, onDate, updateDay }) {
       </Card>
       <Card>
         <div className="row"><h3>🥗 Nutrition</h3><Tag>{totals.calories} kcal · {totals.protein}g protein</Tag></div>
+        <div style={{display:"flex",gap:8,margin:"12px 0",overflowX:"auto"}}>
+          {["breakfast-yogurt-berry-bowl.png","lunch-chicken-quinoa-salad.png","dinner-grilled-salmon-veggies.png"].map(x=>
+            <img key={x} src={"/assets/slimsyfit/images/nutrition/"+x} alt="Meal inspiration"
+              loading="lazy" style={{width:90,height:72,borderRadius:13,objectFit:"cover"}}/>
+          )}
+        </div>
         {(d.meals||[]).map((m,i)=><div className="entry" key={m.id||i}>
           <div className="circleicon"><UtensilsCrossed size={16}/></div><div className="entrymain"><b>{m.name}</b><small>{m.type} · {m.calories} kcal · P {m.protein}g</small></div>
           <button className="button danger sm" aria-label={"Remove "+m.name}
@@ -302,6 +308,12 @@ function TrackScreen({ data, date, onDate, updateDay }) {
       </Card>
       <Card>
         <div className="row"><h3>🚶 Activity</h3><Tag>{activityTotal} min</Tag></div>
+        <div style={{display:"flex",gap:7,alignItems:"center",overflowX:"auto",margin:"8px 0 12px"}}>
+          {["walking","running","cycling","strength","stretching"].map(a=>
+            <img key={a} src={"/assets/slimsyfit/animations/"+a+".gif"} loading="lazy"
+              alt={a+" animation"} style={{width:65,height:65,objectFit:"cover",borderRadius:13,background:"#EFFEFA"}}/>
+          )}
+        </div>
         {(d.activity||[]).map((a,i)=><div className="entry" key={a.id||i}>
           <div className="circleicon"><Footprints size={16}/></div><div className="entrymain"><b>{a.name}</b><small>{a.minutes} minutes</small></div>
           <button className="button danger sm" onClick={()=>patch({activity:(d.activity||[]).filter((_,j)=>j!==i)})}><Trash2 size={13}/></button>
@@ -392,7 +404,17 @@ function PlanScreen({data,onBack}) {
         <div className="row"><span className="sub">Activity goal</span><strong>{p.activityGoal} minutes</strong></div>
       </Card>
       <Card><h3>Easy meal ideas · {p.diet}</h3>
-        {ideas.map((m,i)=><div key={m} className="entry"><div className="circleicon">{["🥣","🥗","🍽️"][i]}</div><div className="entrymain"><b>{["Breakfast","Lunch","Dinner"][i]}</b><small>{m}</small></div></div>)}
+        <img src="/assets/slimsyfit/images/nutrition/front-plan-bowl.png" alt="Balanced nutritious bowl"
+          style={{width:"100%",height:160,objectFit:"cover",borderRadius:15,margin:"2px 0 12px"}}/>
+        {ideas.map((m,i)=>{
+          const selectedDiet=p.diet==="Vegan"?"vegan":p.diet==="Vegetarian"?"vegetarian":"non-vegetarian";
+          const meal=["breakfast","lunch","dinner"][i];
+          return <div key={m} className="entry">
+            <img src={"/assets/slimsyfit/images/nutrition/diet/"+selectedDiet+"-"+meal+".png"} alt=""
+              style={{width:53,height:53,objectFit:"cover",borderRadius:13}}/>
+            <div className="entrymain"><b>{["Breakfast","Lunch","Dinner"][i]}</b><small>{m}</small></div>
+          </div>;
+        })}
         <p className="mini-help">Examples only. Log real foods and quantities in the Track tab.</p>
       </Card>
       {weeks.map(w=><Card key={w.number}><div className="row start"><div className="circleicon">0{w.number}</div><div><h3 style={{marginBottom:3}}>{w.title}</h3><span className="sub">{w.focus}</span></div></div></Card>)}
@@ -448,7 +470,10 @@ function ProgressScreen({ data, today }) {
       <Card>
         <h3>Achievements</h3>
         {badges.length ? badges.slice().reverse().map(b=><div className="badge-row" key={b.count}>
-          <div className="badge-emblem">{MILESTONE_EMOJI[b.count]}</div>
+          <div className="badge-emblem" style={{padding:0,overflow:"hidden"}}>
+            <img alt={b.title} loading="lazy" src={"/assets/slimsyfit/milestones/milestone-"+b.count+(b.count===10?".png":".jpg")}
+              style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+          </div>
           <div><strong style={{fontSize:13}}>{b.title}</strong><div className="muted">{b.count} logged days</div></div>
           <Check size={16} style={{marginLeft:"auto",color:"#1c8e68"}}/>
         </div>) : <div className="empty">Your first badge unlocks after 10 logged days.</div>}
