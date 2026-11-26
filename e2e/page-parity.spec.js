@@ -4,6 +4,8 @@ test("original-style Home, Hydration, Weight, Plan and Results pages remain func
  const errors=[];page.on("pageerror",e=>errors.push(e.message));
  await page.addInitScript(()=>{
    localStorage.setItem("slimsyfit-freeapp:guest-active","1");
+   // Seed once. Re-running this init script on reload must not overwrite saved edits.
+   if(localStorage.getItem("slimsyfit-freeapp:v1:guest"))return;
    const today=(()=>{
      const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
    })();
@@ -64,7 +66,6 @@ test("original-style Home, Hydration, Weight, Plan and Results pages remain func
  await page.reload();
  await expect(page.getByText("TODAY’S PRIORITY")).toBeVisible();
  await page.locator(".original-tile").filter({hasText:"Weight & Progress"}).click();
- console.log("WEIGHT AFTER REFRESH",await page.evaluate(()=>localStorage.getItem("slimsyfit-freeapp:v1:guest")));
  await expect(page.getByText("177 lbs").first()).toBeVisible();
  expect(errors).toEqual([]);
 });
