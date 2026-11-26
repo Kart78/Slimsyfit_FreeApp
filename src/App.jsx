@@ -849,16 +849,22 @@ export default function App() {
       const needsReview=answers.medicalSafety&&answers.medicalSafety!=="None of these apply";
       const fastingChoice=Number(String(answers.fastingWindow||"12:12").split(":")[0])||12;
       const weightUnit=String(answers.currentWeight||"").includes("kg")?"kg":"lbs";
-      setData(prev=>({...prev,profile:{
-        ...prev.profile,name,age:answers.age||"",gender:answers.gender||"",
-        goal:answers.goal||"",diet:answers.diet||"Any",activity:answers.activity||"",
-        bodyType:answers.bodyType||"",targetBody:answers.targetBody||"",
-        currentWeight:answers.currentWeight||"",targetWeight:answers.targetWeight||"",
-        height:answers.height||"",sleepPreference:answers.sleep||"",
-        waterPreference:answers.water||"",fastingExperience:answers.fastingExp||"",
-        fastingAllowed:!needsReview,fastingHours:needsReview?12:fastingChoice,
-        weightUnit, surveyAnswers:answers
-      }}));
+      setData(prev=>{
+        const profile={...prev.profile,name,age:answers.age||"",gender:answers.gender||"",
+          goal:answers.goal||"",diet:answers.diet||"Any",activity:answers.activity||"",
+          bodyType:answers.bodyType||"",targetBody:answers.targetBody||"",
+          currentWeight:answers.currentWeight||"",targetWeight:answers.targetWeight||"",
+          height:answers.height||"",sleepPreference:answers.sleep||"",
+          waterPreference:answers.water||"",fastingExperience:answers.fastingExp||"",
+          fastingAllowed:!needsReview,fastingHours:needsReview?12:fastingChoice,
+          weightUnit,surveyAnswers:answers};
+        const hasWeight=Object.values(prev.days).some(d=>d.weight!=null&&Number(d.weight)>0);
+        const supplied=Number(String(answers.currentWeight||"").match(/^[\\d.]+/)?.[0]);
+        const days=!hasWeight&&Number.isFinite(supplied)&&supplied>0
+          ? {...prev.days,[today]:{...blankDay(),...(prev.days[today]||{}),weight:supplied}}
+          : prev.days;
+        return {...prev,profile,days};
+      });
       setShowSurvey(false);setTab("home");setDetailPage(null);
     }}
   /></div>;
