@@ -1,0 +1,92 @@
+
+.sf-detail{padding:16px 16px 98px;background:#f4f8f7;color:#0d1f1e;min-height:calc(100dvh - 74px)}
+.sf-page-header{display:flex;align-items:center;gap:12px;margin:2px 0 17px}
+.sf-page-header h1{font-size:23px;line-height:1.2;margin:0;font-weight:800;letter-spacing:-.7px}
+.sf-page-header small{display:block;font-size:11px;color:#7a9e9b;margin-top:4px}
+.sf-back{width:30px;height:32px;border:0;background:transparent;color:#0d1f1e;display:grid;place-items:center;padding:0}
+.sf-card{background:#fff;border:1px solid #e4f0ed;border-radius:20px;padding:16px;margin:13px 0;box-shadow:0 3px 17px #173f380b}
+.sf-card>h3,.sf-card .sf-heading-row h3{font-size:18px;margin:0 0 14px;font-weight:800;letter-spacing:-.25px}
+.sf-help{font-size:11px;color:#7a9e9b;line-height:1.6;margin:8px 0 12px}
+.sf-muted{font-size:12px;color:#7a9e9b}
+.sf-heading-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.sf-heading-row h3{margin:0!important}
+.sf-heading-row button{border:0;background:none;color:#0a8f84;font-size:12px;font-weight:800}
+.sf-history-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #e7eeee;padding:14px 0;font-size:12px;color:#3d5a58}
+.sf-history-row strong{color:#0d1f1e;text-align:right;font-size:12px}
+.sf-empty{font-size:12px;color:#7a9e9b;padding:23px 10px;text-align:center}
+.sf-water-card{background:#fff;border-radius:24px;padding:22px 16px 15px;box-shadow:0 3px 20px #173f380a}
+.sf-water-ring{width:min(280px,85vw);height:min(280px,85vw);margin:0 auto 16px;position:relative}
+.sf-water-ring svg{width:100%;height:100%}
+.sf-water-value{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px}
+.sf-water-value img{height:82px;width:82px;object-fit:contain;filter:drop-shadow(0 3px 4px #007ca31e)}
+.sf-water-value strong{font-size:56px;line-height:1.03;font-weight:800;letter-spacing:-2px}
+.sf-water-value span{font-size:20px;font-weight:700;color:#3d5a58}
+.sf-water-controls{display:flex;justify-content:space-around;align-items:center;gap:14px;padding:10px 0}
+.sf-water-controls button{height:68px;width:68px;border-radius:50%;display:grid;place-items:center;border:2px solid #d8e9ec;background:#fff;color:#3d5a58}
+.sf-water-controls button.add{background:linear-gradient(135deg,#0a8f84,#0e7490);border:0;color:#fff;box-shadow:0 7px 17px #0a8f8425}
+.sf-water-controls button:disabled{opacity:.3}
+.sf-water-controls div{display:flex;flex-direction:column;align-items:center}
+.sf-water-controls img{width:67px;height:72px;object-fit:contain}
+.sf-water-controls small{font-size:10px;color:#7a9e9b}
+.sf-water-week{height:110px;display:flex;justify-content:space-around;align-items:end;gap:8px}
+.sf-water-day{width:30px;display:grid;justify-items:center;gap:8px}
+.sf-water-track{width:22px;height:81px;background:#e9f0ef;border-radius:8px;display:flex;align-items:end;overflow:hidden}
+.sf-water-track>div{background:#0a8f84;width:100%;border-radius:8px;transition:height .2s}
+.sf-water-day small{font-size:10px;color:#7a9e9b}
+.sf-metrics-trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.sf-metric{border-radius:18px;padding:13px 7px;min-height:136px;display:flex;align-items:center;flex-direction:column;justify-content:flex-start;text-align:center;gap:8px}
+.sf-metric.blue{background:#edf7fe}.sf-metric.mint{background:#eaf8ee}.sf-metric.cream{background:#fff6eb}
+.sf-metric img{width:51px;height:51px;border-radius:14px;object-fit:contain}
+.sf-metric span{font-size:12px;color:#3d5a58;font-weight:750}
+.sf-metric strong{font-size:clamp(17px,4.1vw,23px);letter-spacing:-.5px;overflow-wrap:anywhere;line-height:1.1}
+.sf-metric small{color:#7a9e9b;font-size:10px;min-height:16px}
+.sf-metric.cream small{color:#c2410c}.sf-metric .sf-bmi-label{color:#16833e}
+.sf-weight-banner{display:block;width:100%;height:136px;object-fit:cover;border-radius:18px;border:1px solid #d8ede9;margin-bottom:12px}
+.sf-line-plot{width:100%;padding:8px 0 0}
+.sf-line-plot svg{width:100%;height:175px;overflow:visible}
+.sf-inline-entry{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.sf-inline-entry label{font-size:12px;flex:1;min-width:60px;font-weight:700;color:#3d5a58}
+.sf-inline-entry input{max-width:110px;min-width:70px;width:30%;padding:9px;border:1px solid #d8edea;border-radius:10px}
+.sf-inline-entry button,.sf-primary-action{border:0;color:#fff;background:#0a8f84;padding:10px 14px;border-radius:12px;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px}
+.sf-primary-action{width:100%;padding:15px;margin:15px 0}
+.sf-inline-entry button:disabled{opacity:.5}
+.sf-coach-banner{padding:17px 16px;background:linear-gradient(125deg,#0a8f84,#0e7490);color:#fff;display:flex;justify-content:space-between;border-radius:15px;box-shadow:0 8px 19px #0a8f8423;margin-bottom:22px}
+.sf-coach-banner b{font-size:15px}
+.sf-coach-banner p{font-size:11px;line-height:1.55;color:#edfffb;margin:7px 0 0}
+.sf-coach-banner>span{font-size:56px;color:#ffffff30;line-height:.8}
+.sf-menu-title{font-size:19px;margin-bottom:9px}
+.sf-menu-list{display:grid;gap:12px;margin-top:13px}
+.sf-meal{display:grid;grid-template-columns:1.3fr 1fr;gap:10px;padding:10px;background:white;border-radius:17px;border:1px solid #e3f0ed;box-shadow:0 3px 11px #0d1f1e06;min-height:154px;overflow:hidden}
+.sf-meal>div{min-width:0}.sf-meal>img{width:100%;height:100%;min-height:132px;object-fit:cover;border-radius:14px}
+.sf-meal-label{display:flex;align-items:center;gap:8px}
+.sf-meal-label>span{width:28px;height:28px;background:#e9f9f4;border-radius:50%;display:grid;place-items:center;font-size:13px}
+.sf-meal-label b{display:block;font-size:11px}.sf-meal-label small{display:block;color:#0a8f84;font-size:9px;margin-top:3px}
+.sf-meal h4{color:#0a8f84;font-size:12px;margin:10px 0 3px;line-height:1.2}
+.sf-meal p{font-size:10px;color:#3d5a58;line-height:1.4;margin:4px 0}
+.sf-meal .sf-meal-protein{color:#0a8f84;font-size:10px}
+.sf-diet-chip{background:#e4f6e9;border-radius:99px;color:#16833e;padding:3px 7px;display:inline-block;font-size:9px;margin-top:4px}
+.sf-result-tabs{display:flex;align-items:center;gap:6px;overflow-x:auto;padding:3px 1px 10px}
+.sf-result-tabs button{white-space:nowrap;border-radius:99px;border:1px solid #d8edea;padding:9px 11px;font-size:11px;font-weight:750;background:white;color:#3d5a58}
+.sf-result-tabs button.active{background:#0a8f84;color:white;border-color:#0a8f84}
+.sf-overview-note{padding:12px 15px;margin:9px 0;border-radius:16px;background:#effdf8;border:1px solid #d8edea;display:flex;align-items:center;gap:12px}
+.sf-overview-note svg{background:#def7eb;min-width:35px;width:35px;height:35px;padding:9px;border-radius:12px;color:#0a8f84}
+.sf-overview-note b,.sf-overview-note small{display:block}.sf-overview-note b{font-size:12px}.sf-overview-note small{font-size:10px;color:#7a9e9b;margin-top:4px;line-height:1.4}
+.sf-range-tabs{display:flex;gap:5px;justify-content:space-between;margin:15px 0 6px}
+.sf-range-tabs button{border:0;background:#f0f5f4;color:#3d5a58;flex:1;border-radius:99px;padding:8px 3px;font-size:11px;font-weight:800}
+.sf-range-tabs button.active{background:#0a8f84;color:#fff}
+.sf-green-chip{background:#e9f9f1;color:#0a8f84;border-radius:9px;padding:7px;font-size:10px;font-weight:750}
+.sf-result-progress{display:flex;align-items:center;gap:9px;text-align:left;border:0;background:white;width:100%;padding:12px 0;border-bottom:1px solid #e7eeee}
+.sf-result-progress:last-child{border:0}
+.sf-result-progress img{width:35px;height:35px;border-radius:10px;object-fit:contain;background:#eff9f7}
+.sf-result-progress>div:nth-child(2){flex:1}.sf-result-progress b,.sf-result-progress small{display:block}
+.sf-result-progress b{font-size:12px}.sf-result-progress small{font-size:10px;color:#7a9e9b;margin-top:3px}
+.sf-result-progress>strong{font-size:12px;color:#3d5a58;width:37px;text-align:right}
+.sf-mini-progress{width:64px;height:7px;background:#e7eeee;border-radius:99px;overflow:hidden}
+.sf-mini-progress>span{height:100%;display:block;background:#0a8f84}
+.sf-award{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #e7eeee}
+.sf-award img{width:53px;height:53px;object-fit:cover;border-radius:12px}
+.sf-award div{flex:1}.sf-award b,.sf-award small{display:block}
+.sf-award b{font-size:12px}.sf-award small{font-size:10px;color:#7a9e9b;margin-top:3px}
+.sf-award.locked img{filter:grayscale(1);opacity:.42}
+.sf-link-action{display:flex;gap:8px;align-items:center;border:0;background:none;color:#0a8f84;font-size:12px;font-weight:800}
+@media(max-width:360px){.sf-detail{padding:12px 11px 93px}.sf-card{padding:12px}.sf-metric{padding:11px 5px;gap:6px}.sf-metric strong{font-size:16px}.sf-meal{grid-template-columns:1.4fr 1fr}.sf-water-controls button{width:57px;height:57px}}
