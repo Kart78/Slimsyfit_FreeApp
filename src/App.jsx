@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { supabase, isCloudConfigured, googleLogin, emailSignIn, emailSignUp, requestPasswordReset, updateAccountPassword } from "./lib/supabase.js";
 import PublicLandingPage from "./PublicLandingPage.jsx";
+import { bmiValue, weightGoalProgress } from "./lib/metrics.js";
 import SurveyFlow from "./SurveyFlow.jsx";
 import SlimsyHome from "./SlimsyHome.jsx";
 import "./public-landing.css";
@@ -496,6 +497,13 @@ function ProgressScreen({ data, today }) {
   const sleep=Object.entries(data.days).filter(([,d])=>d.sleepHours!=null)
     .sort((a,b)=>b[0].localeCompare(a[0])).slice(0,7);
   const avg=water.reduce((s,x)=>s+x.ml,0)/7;
+  const latestWeight=weights[0]?.[1]?.weight??null;
+  const bmi=bmiValue(p.height||p.heightCm,latestWeight,p.weightUnit);
+  const goalProgress=weightGoalProgress(latestWeight,p.currentWeight,p.targetWeight,p.weightUnit);
+  const trend=weights.slice(0,8).reverse();
+  const numericWeights=trend.map(([,d])=>Number(d.weight)).filter(Number.isFinite);
+  const rangeMin=numericWeights.length?Math.min(...numericWeights):0;
+  const rangeMax=numericWeights.length?Math.max(...numericWeights):0;
   return <>
     <SectionTitle note="Based on real entries">Your progress</SectionTitle>
     <div className="content">
@@ -519,6 +527,25 @@ function ProgressScreen({ data, today }) {
           </div>)}
         </div>
         <p className="mini-help" style={{marginTop:12}}>Water chart uses only recorded daily amounts.</p>
+      </Card>
+      <Card>
+        <div className="row"><h3>Weight, BMI & goal</h3><Tag>Recorded data only</Tag></div>
+        <div className="grid2" style={{marginBottom:16}}>
+          <div><span className="muted">Latest weigh-in</span><div className="number" style={{fontSize:22}}>{formatWeight(latestWeight,p.weightUnit)}</div></div>
+          <div><span className="muted">BMI · screening metric</span><div className="number" style={{fontSize:22}}>{bmi??"—"}</div></div>
+        </div>
+        {goalProgress!==null&&<div>
+          <div className="row"><span className="sub">Weight-goal progress</span><strong>{goalProgress}%</strong></div>
+          <div style={{margin:"10px 0 14px"}}><ProgressLine value={goalProgress} total={100}/></div>
+        </div>}
+        {trend.length>=2&&<div className="chart" aria-label="Weight trend from actual measurements">
+          {trend.map(([date,d])=><div className="barcol" key={date}>
+            <div className="bar" title={date+": "+d.weight+" "+p.weightUnit}
+              style={{height:(18+60*(Number(d.weight)-rangeMin)/(Math.max(1,rangeMax-rangeMin)))+"px"}}/>
+            <small>{date.slice(5)}</small>
+          </div>)}
+        </div>}
+        <p className="mini-help" style={{marginTop:10}}>BMI is an approximate screening measure, not a diagnosis. It appears only when height and an actual weigh-in are available. Weight predictions are intentionally omitted.</p>
       </Card>
       <Card>
         <h3>Weight history</h3>
