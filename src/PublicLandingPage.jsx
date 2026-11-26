@@ -242,7 +242,7 @@ export default function PublicLandingPage({ onNew, onSignIn }) {
 
       <footer className="public-footer">
         <span>© SlimSyFit FreeApp</span>
-        <div><a href="#features">Privacy</a><a href="#how-it-works">Terms</a><a href="#how-it-works">Delete account</a><a href="/about">About</a></div>
+        <div><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="/delete-account.html">Delete account</a><a href="/about">About</a></div>
       </footer>
 
       <div className="public-mobile-sticky">
