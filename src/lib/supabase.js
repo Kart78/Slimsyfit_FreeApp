@@ -27,3 +27,15 @@ export async function emailSignUp(email, password) {
   if (error) throw error;
   return data;
 }
+export async function requestPasswordReset(email) {
+  if (!supabase) throw new Error("Configure a separate Supabase project first.");
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: window.location.origin + "/"
+  });
+  if (error) throw error;
+}
+export async function updateAccountPassword(password) {
+  if (!supabase) throw new Error("Configure a separate Supabase project first.");
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
+}
