@@ -10,6 +10,7 @@ import PublicLandingPage from "./PublicLandingPage.jsx";
 import { bmiValue, weightGoalProgress } from "./lib/metrics.js";
 import SurveyFlow from "./SurveyFlow.jsx";
 import SlimsyHome from "./SlimsyHome.jsx";
+import {WaterView,WeightView,PlanView,ResultsView} from "./WellnessPages.jsx";
 import "./public-landing.css";
 import {
   blankDay, createEmptyData, earnedBadges, entryCount, levelInfo, loadLocal,
@@ -661,6 +662,7 @@ export default function App() {
   const [dataReady,setDataReady] = useState(false);
   const [tab,setTab] = useState("home");
   const [showPlan,setShowPlan] = useState(false);
+  const [detailPage,setDetailPage] = useState(null);
   const [date,setDate] = useState(localDay());
   const [now,setNow] = useState(Date.now());
   const [syncState,setSyncState] = useState("local");
@@ -724,7 +726,7 @@ export default function App() {
       }
       if(!live||keyRef.current!==identity)return;
       setData(restored);
-      setTab("home");setShowPlan(false);
+      setTab("home");setShowPlan(false);setDetailPage(null);
       setLoadedIdentity(identity);setDataReady(true);
       setSyncState(identity==="guest"?"local":"synced");
     };
@@ -760,6 +762,7 @@ export default function App() {
   };
   const patchProfile=profile=>setData(d=>({...d,profile}));
   const addWater=()=>updateDay(today,d=>({...d,waterMl:safeMl((d.waterMl||0)+250)}));
+  const changeWater=delta=>updateDay(today,d=>({...d,waterMl:safeMl((d.waterMl||0)+Math.round(delta))}));
   const startFasting=()=>{
     if(data.profile.fastingAllowed===false){setSyncError("Fasting is disabled based on your medical-safety survey answer. Consult your clinician before enabling fasting.");return}
     setData(d=>({...d,fasting:{...d.fasting,activeStart:Date.now()}}))
@@ -846,19 +849,31 @@ export default function App() {
         fastingAllowed:!needsReview,fastingHours:needsReview?12:fastingChoice,
         weightUnit, surveyAnswers:answers
       }}));
-      setShowSurvey(false);setTab("home");
+      setShowSurvey(false);setTab("home");setDetailPage(null);
     }}
   /></div>;
+  const openTab=id=>{
+    setDetailPage(null);
+    if(id==="plan"){setShowPlan(true);setTab("home")}
+    else{setShowPlan(false);setTab(id)}
+    window.scrollTo(0,0);
+  };
+  const goBack=()=>{setDetailPage(null);setShowPlan(false);setTab("home");window.scrollTo(0,0)};
   return <div className="shell">
-    {showPlan?<PlanScreen data={data} onBack={()=>{setShowPlan(false);setTab("home")}}/>:
-      tab==="home"?<SlimsyHome data={data} today={today} setTab={setTab} addWater={addWater}
-        onOpenPlan={()=>setShowPlan(true)} onOpenSettings={()=>setTab("me")}/>:
+    {detailPage==="water"?<WaterView data={data} today={today} onWater={changeWater} onBack={goBack}/>:
+      detailPage==="weight"?<WeightView data={data} today={today} updateDay={updateDay} onBack={goBack}/>:
+      showPlan?<PlanView data={data} onBack={goBack} onTrack={()=>openTab("track")}/>:
+      tab==="home"?<SlimsyHome data={data} today={today} setTab={openTab} addWater={addWater}
+        onOpenPlan={()=>openTab("plan")} onOpenSettings={()=>openTab("me")}
+        onOpenWater={()=>{setShowPlan(false);setDetailPage("water");window.scrollTo(0,0)}}
+        onOpenWeight={()=>{setShowPlan(false);setDetailPage("weight");window.scrollTo(0,0)}}/>:
       tab==="track"?<TrackScreen data={data} date={date} onDate={setDate} updateDay={updateDay}/>:
-      tab==="habits"?<HabitsScreen data={data} today={today}
-        onFasting={()=>setTab("fasting")} onTrack={()=>setTab("track")} onProgress={()=>setTab("progress")}/>:
+      tab==="habits"?<HabitsScreen data={data} today={today} onFasting={()=>openTab("fasting")}
+        onTrack={()=>openTab("track")} onProgress={()=>openTab("progress")}/>:
       tab==="fasting"?<FastingScreen data={data} now={now} onStart={startFasting} onFinish={finishFasting}
         onHoursChange={h=>setData(d=>({...d,profile:{...d.profile,fastingHours:h}}))}/>:
-      tab==="progress"?<ProgressScreen data={data} today={today}/>:
+      tab==="progress"?<ResultsView data={data} today={today}
+        onWeight={()=>{setDetailPage("weight");window.scrollTo(0,0)}} onTrack={()=>openTab("track")}/>:
       <MeScreen data={data} identity={currentIdentity} session={session} onProfile={patchProfile}
         onSignOut={signOut} onReset={reset} onDeleteAccount={deleteAccount} syncState={syncState}
         onEditSurvey={()=>setShowSurvey(true)}
@@ -871,8 +886,8 @@ export default function App() {
         }}/>}
     {syncError && <div className="error" role="status" style={{margin:"0 20px 12px"}}>{syncError}</div>}
     <div className="navwrap"><nav className="navbar" aria-label="Main navigation">
-      {NAV.map(({id,label,Icon})=><button type="button" key={id} className={"navitem"+((showPlan?id==="plan":tab===id)?" on":"")}
-        onClick={()=>{if(id==="plan")setShowPlan(true);else{setShowPlan(false);setTab(id)}window.scrollTo(0,0)}}><Icon size={22}/><span>{label}</span></button>)}
+      {NAV.map(({id,label,Icon})=><button type="button" key={id} className={"navitem"+((showPlan?id==="plan":(detailPage?false:tab===id))?" on":"")}
+        onClick={()=>openTab(id)}><Icon size={22}/><span>{label}</span></button>)}
     </nav></div>
   </div>;
 }
