@@ -283,21 +283,14 @@ function TrackScreen({ data, date, onDate, updateDay }) {
   const totals=(d.meals||[]).reduce((a,x)=>({calories:a.calories+(+x.calories||0),protein:a.protein+(+x.protein||0)}),{calories:0,protein:0});
   const activityTotal=(d.activity||[]).reduce((n,x)=>n+x.minutes,0);
   return <>
-    <SectionTitle note="Manual entries only">Daily tracking</SectionTitle>
+    <SectionTitle note="Manual food logging">Nutrition</SectionTitle>
     <div className="content">
       <DatePicker date={date} onPick={onDate}/>
-      <Card>
-        <div className="row"><h3>💧 Hydration</h3><Tag>{Math.round((d.waterMl||0)/(p.waterGoalMl||2000)*100)}% goal</Tag></div>
-        <div className="water-controls">
-          <div><div className="number" style={{fontSize:30}}>{(d.waterMl||0).toLocaleString()} <span style={{fontSize:16}}>ml</span></div><span className="muted">Daily goal: {p.waterGoalMl} ml</span></div>
-          <div style={{display:"flex",gap:8}}><Button outline small disabled={!d.waterMl} onClick={()=>patch({waterMl:safeMl(d.waterMl-250)})}>− 250</Button>
-            <Button small onClick={()=>patch({waterMl:safeMl((d.waterMl||0)+250)})}><Plus size={14}/>250</Button></div>
-        </div>
-        <div className="mini-grid">
-          {Array.from({length:8},(_,i)=><span key={i} className={"drop"+(i*250<(d.waterMl||0)?" filled":"")}>♥</span>)}
-        </div>
-        <ProgressLine value={d.waterMl||0} total={p.waterGoalMl}/>
-      </Card>
+      <div className="sf-nutrition-summary">
+        <img src="/assets/slimsyfit/images/nutrition/front-plan-bowl.png" alt="Balanced nutrition bowl"/>
+        <div><span>TODAY'S NUTRITION</span><h3>{(d.meals||[]).length}/4 meals</h3>
+          <p>Log real meals and nutrients at your own pace.</p></div>
+      </div>
       <Card>
         <div className="row"><h3>🥗 Nutrition</h3><Tag>{totals.calories} kcal · {totals.protein}g protein</Tag></div>
         <div style={{display:"flex",gap:8,margin:"12px 0",overflowX:"auto"}}>
@@ -323,6 +316,18 @@ function TrackScreen({ data, date, onDate, updateDay }) {
           <Button type="submit" block outline disabled={!food.name.trim()||food.calories===""||["carbs","fat","protein"].some(k=>food[k]==="")}><Plus size={15}/> Save meal manually</Button>
         </form>
         <p className="mini-help" style={{marginTop:10}}>Enter nutrition values from food labels or personal records. No AI calorie estimation.</p>
+      </Card>
+      <Card>
+        <div className="row"><h3>💧 Hydration</h3><Tag>{Math.round((d.waterMl||0)/(p.waterGoalMl||2000)*100)}% goal</Tag></div>
+        <div className="water-controls">
+          <div><div className="number" style={{fontSize:30}}>{(d.waterMl||0).toLocaleString()} <span style={{fontSize:16}}>ml</span></div><span className="muted">Daily goal: {p.waterGoalMl} ml</span></div>
+          <div style={{display:"flex",gap:8}}><Button outline small disabled={!d.waterMl} onClick={()=>patch({waterMl:safeMl(d.waterMl-250)})}>− 250</Button>
+            <Button small onClick={()=>patch({waterMl:safeMl((d.waterMl||0)+250)})}><Plus size={14}/>250</Button></div>
+        </div>
+        <div className="mini-grid">
+          {Array.from({length:8},(_,i)=><span key={i} className={"drop"+(i*250<(d.waterMl||0)?" filled":"")}>♥</span>)}
+        </div>
+        <ProgressLine value={d.waterMl||0} total={p.waterGoalMl}/>
       </Card>
       <Card>
         <div className="row"><h3>🌙 Sleep</h3><Tag>{formatHours(d.sleepHours)}</Tag></div>
