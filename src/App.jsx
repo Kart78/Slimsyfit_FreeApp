@@ -3,7 +3,7 @@ import {
   Activity, ArrowLeft, ArrowRight, Award, CalendarDays, Check, ChevronRight,
   CircleUserRound, Clock3, Cloud, CloudOff, Droplets, Flame, Footprints,
   Heart, Home, Leaf, LogOut, Moon, Plus, Scale, ShieldCheck,
-  Sparkles, Sunrise, Target, Trash2, TrendingUp, UtensilsCrossed
+  Sparkles, Sunrise, Target, Trash2, TrendingUp, UtensilsCrossed, MessageCircle
 } from "lucide-react";
 import { supabase, isCloudConfigured, googleLogin, emailSignIn, emailSignUp } from "./lib/supabase.js";
 import PublicLandingPage from "./PublicLandingPage.jsx";
@@ -19,7 +19,7 @@ const NAV = [
   { id: "home", label: "Home", Icon: Home },
   { id: "track", label: "Nutrition", Icon: Activity },
   { id: "plan", label: "Plan", Icon: CalendarDays },
-  { id: "fasting", label: "Fasting", Icon: Clock3 },
+  { id: "habits", label: "Habits", Icon: MessageCircle },
   { id: "progress", label: "Results", Icon: TrendingUp }
 ];
 const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
@@ -338,6 +338,41 @@ function TrackScreen({ data, date, onDate, updateDay }) {
   </>;
 }
 
+
+function HabitsScreen({data,today,onFasting,onTrack,onProgress}) {
+  const day=data.days[today]||blankDay();
+  const activity=(day.activity||[]).reduce((n,x)=>n+(Number(x.minutes)||0),0);
+  const completed=Object.values(day.habits||{}).filter(Boolean).length;
+  const goal=levelInfo(data);
+  return <>
+    <SectionTitle note="No AI needed">Healthy habits</SectionTitle>
+    <div className="content">
+      <Card>
+        <div className="row start">
+          <img src="/assets/slimsyfit/animations/walking.gif" alt="Walking animation" style={{width:76,height:76,borderRadius:16,objectFit:"cover"}}/>
+          <div><Tag>Today's focus</Tag><h3 style={{margin:"8px 0 4px"}}>Move your body</h3><p>Small daily actions build consistency.</p></div>
+        </div>
+        <Button block onClick={onTrack}>Log daily habits <ArrowRight size={16}/></Button>
+      </Card>
+      <div className="grid2">
+        <Card className="metric"><span className="emoji">✅</span><div><b>{completed}/4</b><span>Today's check-ins</span></div></Card>
+        <Card className="metric"><span className="emoji">🚶</span><div><b>{activity} min</b><span>Movement logged</span></div></Card>
+      </div>
+      <Card>
+        <div className="row start"><div className="circleicon"><Clock3 size={20}/></div>
+          <div><h3 style={{marginBottom:4}}>Intermittent fasting</h3>
+            <p>{data.profile.fastingAllowed===false?"Clinician review recommended before fasting":data.profile.fastingHours+":"
+              +(24-data.profile.fastingHours)+" routine · optional"}</p></div></div>
+        <Button outline block disabled={data.profile.fastingAllowed===false} onClick={onFasting}><Flame size={16}/> Open fasting timer</Button>
+      </Card>
+      <Card><h3>Your commitment</h3><Tag>{goal.name}</Tag>
+        <p style={{marginTop:12}}>Consistency is measured from days with actual tracking entries. No fabricated logs or paid challenges.</p>
+        <Button ghost block onClick={onProgress}>Achievements and progress <ChevronRight size={16}/></Button>
+      </Card>
+    </div>
+  </>;
+}
+
 function FastingScreen({ data, now, onStart, onFinish, onHoursChange }) {
   const start=data.fasting.activeStart;
   const hours=data.profile.fastingHours;
@@ -483,7 +518,7 @@ function ProgressScreen({ data, today }) {
   </>;
 }
 
-function MeScreen({ data, identity, session, onProfile, onSignOut, onReset, syncState }) {
+function MeScreen({ data, identity, session, onProfile, onSignOut, onReset, onConnect, onEditSurvey, syncState }) {
   const p=data.profile;
   const [name,setName]=useState(p.name);
   const [diet,setDiet]=useState(p.diet);
@@ -525,6 +560,16 @@ function MeScreen({ data, identity, session, onProfile, onSignOut, onReset, sync
         {message&&<div role="status" className="success">{message}</div>}
       </Card>
       <Card>
+        <h3>Wellness questionnaire</h3>
+        <p>Review or update the original 18-question SlimSyFit survey without AI.</p>
+        <Button outline block onClick={onEditSurvey}><CalendarDays size={16}/> Retake my survey</Button>
+      </Card>
+      {!session&&<Card>
+        <h3>Sync your history</h3>
+        <p>Sign in with Google or email to save your guest tracking history to your own cloud account.</p>
+        <Button block onClick={onConnect}><Cloud size={16}/> Sign in and sync history</Button>
+      </Card>}
+      <Card>
         <h3>Your data</h3>
         <p>Export a copy of your activity history. In guest mode, data lives only on this device. Cloud mode uses your separate Supabase project.</p>
         <Button block outline onClick={exportData}>Export my data (JSON)</Button>
@@ -547,6 +592,8 @@ export default function App() {
   const [guestMode,setGuestMode] = useState(false);
   const [showSurvey,setShowSurvey] = useState(false);
   const [showLogin,setShowLogin] = useState(false);
+  const [cloudWritable,setCloudWritable] = useState(true);
+  const guestDraftRef=useRef(null);
   const [data,setData] = useState(createEmptyData);
   const [dataReady,setDataReady] = useState(false);
   const [tab,setTab] = useState("home");
@@ -583,6 +630,7 @@ export default function App() {
     keyRef.current=identity;
     setDataReady(false);
     setSyncState(identity==="guest"?"local":"loading");
+    setCloudWritable(identity==="guest");
     const restore=async()=>{
       let restored=loadLocal(identity);
       if(identity!=="guest"&&supabase){
@@ -591,8 +639,15 @@ export default function App() {
             .select("payload").eq("user_id",identity).maybeSingle();
           if(error)throw error;
           if(row?.payload&&Object.keys(row.payload).length) restored=normalizeData(row.payload);
-          setSyncError("");
-        }catch(err){if(live)setSyncError("Cloud restore failed. Local copy loaded: "+err.message);}
+          else if(guestDraftRef.current?.profile?.name){restored=normalizeData(guestDraftRef.current)}
+          guestDraftRef.current=null;
+          if(live){setCloudWritable(true);setSyncError("")}
+        }catch(err){
+          if(live){
+            setCloudWritable(false);
+            setSyncError("Cloud restore failed. Changes remain local; cloud sync is paused until you sign in again. "+err.message);
+          }
+        }
       }
       if(!live||keyRef.current!==identity)return;
       setData(restored);
@@ -607,7 +662,7 @@ export default function App() {
     if(!dataReady||!currentIdentity)return;
     const identity=currentIdentity;
     saveLocal(identity,data);
-    if(identity==="guest"||!supabase)return;
+    if(identity==="guest"||!supabase||!cloudWritable)return;
     setSyncState("saving");
     const timer=setTimeout(async()=>{
       try{
@@ -621,7 +676,7 @@ export default function App() {
       }
     },700);
     return ()=>clearTimeout(timer);
-  },[data,dataReady,currentIdentity]);
+  },[data,dataReady,currentIdentity,cloudWritable]);
   const today=localDay();
   const updateDay=(dateKey,change)=>{
     setData(previous=>{
@@ -632,7 +687,10 @@ export default function App() {
   };
   const patchProfile=profile=>setData(d=>({...d,profile}));
   const addWater=()=>updateDay(today,d=>({...d,waterMl:safeMl((d.waterMl||0)+250)}));
-  const startFasting=()=>setData(d=>({...d,fasting:{...d.fasting,activeStart:Date.now()}}));
+  const startFasting=()=>{
+    if(data.profile.fastingAllowed===false){setSyncError("Fasting is disabled based on your medical-safety survey answer. Consult your clinician before enabling fasting.");return}
+    setData(d=>({...d,fasting:{...d.fasting,activeStart:Date.now()}}))
+  };
   const finishFasting=()=>{
     setData(d=>{
       const start=d.fasting.activeStart;if(!start)return d;
@@ -654,6 +712,7 @@ export default function App() {
   const signOut=async()=>{
     if(supabase&&session) await supabase.auth.signOut();
     setSession(null);setGuestMode(false);setDataReady(false);
+    setShowLogin(false);setShowSurvey(false);setShowPlan(false);setCloudWritable(false);
   };
   if(!sessionReady)return <div className="authscreen"><div className="logo"><Leaf/></div><h2>Loading FreeApp…</h2></div>;
   if(!currentIdentity) return showLogin
@@ -692,15 +751,23 @@ export default function App() {
       tab==="home"?<SlimsyHome data={data} today={today} setTab={setTab} addWater={addWater}
         onOpenPlan={()=>setShowPlan(true)} onOpenSettings={()=>setTab("me")}/>:
       tab==="track"?<TrackScreen data={data} date={date} onDate={setDate} updateDay={updateDay}/>:
+      tab==="habits"?<HabitsScreen data={data} today={today}
+        onFasting={()=>setTab("fasting")} onTrack={()=>setTab("track")} onProgress={()=>setTab("progress")}/>:
       tab==="fasting"?<FastingScreen data={data} now={now} onStart={startFasting} onFinish={finishFasting}
         onHoursChange={h=>setData(d=>({...d,profile:{...d.profile,fastingHours:h}}))}/>:
       tab==="progress"?<ProgressScreen data={data} today={today}/>:
       <MeScreen data={data} identity={currentIdentity} session={session} onProfile={patchProfile}
-        onSignOut={signOut} onReset={reset} syncState={syncState}/>}
+        onSignOut={signOut} onReset={reset} syncState={syncState}
+        onEditSurvey={()=>setShowSurvey(true)}
+        onConnect={()=>{
+          guestDraftRef.current=structuredClone(data);
+          saveLocal("guest",data);
+          setGuestMode(false);setShowSurvey(false);setShowLogin(true);
+        }}/>}
     {syncError && <div className="error" role="status" style={{margin:"0 20px 12px"}}>{syncError}</div>}
-    {!showPlan&&<div className="navwrap"><nav className="navbar" aria-label="Main navigation">
-      {NAV.map(({id,label,Icon})=><button type="button" key={id} className={"navitem"+(tab===id?" on":"")}
+    <div className="navwrap"><nav className="navbar" aria-label="Main navigation">
+      {NAV.map(({id,label,Icon})=><button type="button" key={id} className={"navitem"+((showPlan?id==="plan":tab===id)?" on":"")}
         onClick={()=>{if(id==="plan")setShowPlan(true);else{setShowPlan(false);setTab(id)}window.scrollTo(0,0)}}><Icon size={22}/><span>{label}</span></button>)}
-    </nav></div>}
+    </nav></div>
   </div>;
 }
