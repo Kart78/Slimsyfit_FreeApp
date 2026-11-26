@@ -549,7 +549,7 @@ function ProgressScreen({ data, today }) {
   </>;
 }
 
-function MeScreen({ data, identity, session, onProfile, onSignOut, onReset, onConnect, onEditSurvey, syncState }) {
+function MeScreen({ data, identity, session, onProfile, onSignOut, onReset, onDeleteAccount, onConnect, onEditSurvey, syncState }) {
   const p=data.profile;
   const [name,setName]=useState(p.name);
   const [diet,setDiet]=useState(p.diet);
@@ -610,6 +610,7 @@ function MeScreen({ data, identity, session, onProfile, onSignOut, onReset, onCo
         <div className="action-list">
           <Button block outline onClick={onSignOut}><LogOut size={16}/>{session?"Sign out":"Exit local mode"}</Button>
           <Button block danger onClick={onReset}><Trash2 size={15}/> Delete tracking history</Button>
+          {session&&<Button block danger onClick={onDeleteAccount}><Trash2 size={15}/> Delete account and data</Button>}
         </div>
       </Card>
       <div className="footer">Slimsyfit FreeApp v1.0.0 · No AI · No Stripe · No subscriptions</div>
@@ -754,6 +755,24 @@ export default function App() {
     setData(createEmptyData());
     setTab("home");
   };
+  const deleteAccount=async()=>{
+    if(!session?.user?.id||!supabase)return;
+    if(window.prompt("To delete your FreeApp login account and tracking history, type DELETE")!=="DELETE")return;
+    if(!window.confirm("Permanently delete your FreeApp account, all linked logs, and cloud records?"))return;
+    try{
+      const {data:result,error}=await supabase.functions.invoke("delete-account",{
+        body:{confirmation:"DELETE"}
+      });
+      if(error||result?.deleted!==true)throw error||new Error("Deletion could not be confirmed.");
+      try{localStorage.removeItem("slimsyfit-freeapp:v1:"+session.user.id)}catch{}
+      try{await supabase.auth.signOut()}catch{}
+      setData(createEmptyData());setSession(null);setGuestMode(false);
+      setShowLogin(false);setShowSurvey(false);setDataReady(false);setLoadedIdentity(null);
+      setSyncError("");
+    }catch(err){
+      setSyncError("Account deletion could not be completed: "+(err.message||"Please deploy the FreeApp delete-account Supabase function."));
+    }
+  };
   const signOut=async()=>{
     if(supabase&&session) await supabase.auth.signOut();
     setSession(null);setGuestMode(false);setDataReady(false);setLoadedIdentity(null);
@@ -814,7 +833,7 @@ export default function App() {
         onHoursChange={h=>setData(d=>({...d,profile:{...d.profile,fastingHours:h}}))}/>:
       tab==="progress"?<ProgressScreen data={data} today={today}/>:
       <MeScreen data={data} identity={currentIdentity} session={session} onProfile={patchProfile}
-        onSignOut={signOut} onReset={reset} syncState={syncState}
+        onSignOut={signOut} onReset={reset} onDeleteAccount={deleteAccount} syncState={syncState}
         onEditSurvey={()=>setShowSurvey(true)}
         onConnect={()=>{
           guestDraftRef.current=structuredClone(data);
