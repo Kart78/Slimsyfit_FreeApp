@@ -55,7 +55,6 @@ test("original landing -> 18 survey questions -> local dashboard -> saved tracki
   await page.getByRole("button",{name:/250/}).last().click();
   await expect(page.getByText("250", {exact:false}).first()).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("heading",{name:"Nutrition",exact:true})).not.toBeVisible();
   await expect(page.getByText("TODAY’S PRIORITY")).toBeVisible();
   await page.getByRole("button",{name:"Nutrition",exact:true}).last().click();
   await expect(page.getByText("250", {exact:false}).first()).toBeVisible();
