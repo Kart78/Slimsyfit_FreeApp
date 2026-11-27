@@ -19,8 +19,6 @@ export function MenuView({ data, date, updateDay }) {
   }] }));
 
   return <section className="sf-menu" aria-label="Meal plan">
-    <div className="sf-coach-banner"><div><b>Your wellness guide</b><p>Fuel your body with real, whole foods.<br/>Stay consistent, see the change. 💚</p></div><span>❧</span></div>
-
     <div className="sf-diet-tabs" role="tablist" aria-label="Diet">{Object.keys(MENUS).map(k =>
       <button key={k} role="tab" aria-selected={diet === k} className={diet === k ? "active" : ""} onClick={() => { setDiet(k); setOpen(null); }}>{k}</button>)}</div>
 

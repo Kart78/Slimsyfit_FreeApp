@@ -56,6 +56,13 @@ test("original-style Home, Hydration, Weight, Plan and Results pages remain func
  await page.getByRole("tab",{name:"Vegan"}).click();
  for(const dish of ["Apple overnight oats","Chickpea spinach rice bowl","Edamame and pear","Ginger tofu quinoa bowl"])await expect(page.getByRole("heading",{name:dish})).toBeVisible();
  await page.screenshot({path:"test-results/"+test.info().project.name+"-nutrition-menu.png",fullPage:true});
+ // Own-meal form is folded by default and still works when opened.
+ await expect(page.getByLabel("Food or dish")).toBeHidden();
+ await page.getByText("Add your own meal").click();
+ await page.getByLabel("Food or dish").fill("Lentil soup");
+ for(const [l,v] of [["Calories (kcal)","300"],["Carbs (g)","40"],["Fat (g)","6"],["Protein (g)","18"]])await page.getByLabel(l).fill(v);
+ await page.getByRole("button",{name:"Save meal manually"}).click();
+ await expect(page.getByText("Lentil soup")).toBeVisible();
  await page.getByRole("button",{name:"Plan",exact:true}).click();
  await expect(page.getByRole("heading",{name:"Your Plan"})).toBeVisible();
  await expect(page.locator(".sf-meal")).toHaveCount(0);

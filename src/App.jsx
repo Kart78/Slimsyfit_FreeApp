@@ -18,6 +18,8 @@ import {
   blankDay, changeWeightUnit, createEmptyData, earnedBadges, levelInfo, loadLocal,
   localDay, normalizeData, rangeDates, safeMl, safeNumber, saveLocal, toClock
 } from "./lib/tracker.js";
+// Loaded last so the compact spacing overrides older page styles.
+import "./compact.css";
 
 const NAV = [
   { id: "home", label: "Home", Icon: Home },
@@ -209,8 +211,8 @@ function TrackScreen({ data, date, onDate, updateDay }) {
       </div>)}
       {meals.length===0&&<div className="sf-empty">No meals logged yet. Log a menu meal above or add your own below.</div>}
     </div>
-    <div className="card">
-      <h3>Add your own meal</h3>
+    <details className="card sf-add-meal">
+      <summary>Add your own meal <em>+ Add</em></summary>
       <form onSubmit={addFood}>
         <SelectField label="Meal type" value={food.type} onChange={v=>setFood(x=>({...x,type:v}))} options={MEAL_TYPES}/>
         <FormField label="Food or dish" value={food.name} onChange={v=>setFood(x=>({...x,name:v}))} placeholder="Example: Vegetable rice bowl"/>
@@ -222,7 +224,7 @@ function TrackScreen({ data, date, onDate, updateDay }) {
         <Button type="submit" block outline disabled={!food.name.trim()||food.calories===""||["carbs","fat","protein"].some(k=>food[k]==="")}><Plus size={15}/> Save meal manually</Button>
       </form>
       <p className="mini-help" style={{marginTop:10}}>Enter values from food labels or your own records. No AI estimation.</p>
-    </div>
+    </details>
   </div>;
 }
 
