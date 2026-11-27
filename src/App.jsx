@@ -5,7 +5,7 @@ import {
   Heart, Home, Leaf, LogOut, Moon, Plus, Scale, ShieldCheck,
   Sparkles, Sunrise, Target, Trash2, TrendingUp, UtensilsCrossed
 } from "lucide-react";
-import { supabase, isCloudConfigured, googleLogin, emailSignIn, emailSignUp, requestPasswordReset, updateAccountPassword } from "./lib/supabase.js";
+import { supabase, isCloudConfigured, googleAvailable, googleLogin, emailSignIn, emailSignUp, requestPasswordReset, updateAccountPassword } from "./lib/supabase.js";
 import PublicLandingPage from "./PublicLandingPage.jsx";
 import { bmiValue, weightGoalProgress } from "./lib/metrics.js";
 import SurveyFlow from "./SurveyFlow.jsx";
@@ -81,6 +81,8 @@ function pageGreeting() {
 
 function AuthLanding({ enterLocal }) {
   const [mode, setMode] = useState("signin");
+  const [hasGoogle, setHasGoogle] = useState(false);
+  useEffect(() => { let on = true; googleAvailable().then(v => { if (on) setHasGoogle(v); }); return () => { on = false; }; }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -112,8 +114,8 @@ function AuthLanding({ enterLocal }) {
     <Card>
       <h2 style={{marginBottom:5}}>{mode === "signin" ? "Welcome back" : mode === "forgot" ? "Reset your password" : "Create your free account"}</h2>
       <p>{isCloudConfigured ? "Sync your tracking data securely across devices." : "Cloud sign-in will be available after setting up the new Supabase project."}</p>
-      <Button block outline disabled={!isCloudConfigured || busy} onClick={google}><Cloud size={17}/> Continue with Google</Button>
-      <div className="dividerline"/>
+      {hasGoogle&&<><Button block outline disabled={busy} onClick={google}><Cloud size={17}/> Continue with Google</Button>
+      <div className="dividerline"/></>}
       <form onSubmit={login}>
         <FormField label="Email" value={email} onChange={setEmail} type="email" placeholder="you@example.com"/>
         {mode !== "forgot"&&<FormField label="Password" value={password} onChange={setPassword} type="password" placeholder="At least 6 characters"/>}
@@ -130,7 +132,7 @@ function AuthLanding({ enterLocal }) {
       {message && <div className={message.startsWith("Check")?"success":"error"} role="status">{message}</div>}
     </Card>
     <Button ghost block onClick={enterLocal}><CloudOff size={17}/> Continue without an account</Button>
-    <p className="footer">Local mode saves on this device only. Google login requires a separate Supabase project.</p>
+    <p className="footer">Local mode saves on this device only. Sign in to sync across your devices.</p>
   </main>;
 }
 

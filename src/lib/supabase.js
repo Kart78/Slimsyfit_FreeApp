@@ -5,6 +5,14 @@ export const supabase = url && anon
   ? createClient(url, anon, { auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true } })
   : null;
 export const isCloudConfigured = Boolean(supabase);
+/** True once the Google provider is enabled in this Supabase project (checked live). */
+export async function googleAvailable() {
+  if (!supabase) return false;
+  try {
+    const r = await fetch(url + "/auth/v1/settings", { headers: { apikey: anon } });
+    return r.ok && Boolean((await r.json())?.external?.google);
+  } catch { return false; }
+}
 export async function googleLogin() {
   if (!supabase) throw new Error("Configure a separate Supabase project first.");
   const { error } = await supabase.auth.signInWithOAuth({
