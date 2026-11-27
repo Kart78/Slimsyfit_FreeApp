@@ -13,6 +13,7 @@ import SlimsyHome from "./SlimsyHome.jsx";
 import {WaterView,WeightView,PlanView,ResultsView} from "./WellnessPages.jsx";
 import {ActivityView,MilestoneModal,useReminders,RemindersCard} from "./ExtraPages.jsx";
 import {MenuView} from "./MenuPage.jsx";
+import {OwnMealPanel,MealPhoto,deleteMealPhoto} from "./MealBuilder.jsx";
 import "./public-landing.css";
 import {
   blankDay, changeWeightUnit, createEmptyData, earnedBadges, levelInfo, loadLocal,
@@ -173,22 +174,12 @@ function DatePicker({ date, onPick }) {
     </button>)}
   </div>;
 }
-function TrackScreen({ data, date, onDate, updateDay }) {
+function TrackScreen({ data, date, onDate, updateDay, identity, onSaveMyMeal, onDeleteMyMeal }) {
   const d=data.days[date]||blankDay();
-  const [food,setFood]=useState({type:"Breakfast",name:"",calories:"",carbs:"",fat:"",protein:""});
-  const [foodError,setFoodError]=useState("");
-  const patch = changes => updateDay(date,old=>({...old,...changes}));
   const meals=d.meals||[];
-  const addFood=e=>{
-    e.preventDefault();
-    if(!food.name.trim())return;
-    const n = safeNumber(food.calories,20000);
-    if(n===null){setFoodError("Enter valid calories (0–20,000)");return}
-    const parts=["carbs","fat","protein"].map(k=>safeNumber(food[k],3000));
-    if(parts.some(x=>x===null)){setFoodError("Enter nonnegative carbs, fat and protein amounts.");return}
-    patch({meals:[...meals,{id:Date.now().toString(36),type:food.type,name:food.name.trim(),calories:n,carbs:parts[0],fat:parts[1],protein:parts[2]}]});
-    setFood({...food,name:"",calories:"",carbs:"",fat:"",protein:""});setFoodError("");
-  };
+  const patch = changes => updateDay(date,old=>({...old,...changes}));
+  const logMeal = m => updateDay(date,old=>({...old,meals:[...(old.meals||[]),{id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),...m}]}));
+  const removeMeal = m => { patch({meals:meals.filter(x=>x!==m)}); if(m.id) deleteMealPhoto(identity,m.id).catch(()=>{}); };
   const t=meals.reduce((a,x)=>({calories:a.calories+(+x.calories||0),protein:a.protein+(+x.protein||0)}),{calories:0,protein:0});
   const types=new Set(meals.map(m=>m.type)).size;
   const isToday=date===localDay();
@@ -198,33 +189,22 @@ function TrackScreen({ data, date, onDate, updateDay }) {
     <div className="sf-nutrition-summary">
       <img src="/assets/slimsyfit/images/nutrition/front-plan-bowl.png" alt="Balanced nutrition bowl"/>
       <div><span>{isToday?"TODAY'S NUTRITION":dateShort(date).toUpperCase()}</span><h3>{types}/4 meals</h3>
-        <p>{t.calories} kcal · {t.protein}g protein logged</p></div>
+        <p>{Math.round(t.calories)} kcal · {Math.round(t.protein*10)/10}g protein logged</p></div>
     </div>
     <h2 className="sf-section">{isToday?"Today's Menu":"Menu for "+dateShort(date)}</h2>
     <MenuView data={data} date={date} updateDay={updateDay}/>
     <div className="sf-card">
-      <div className="sf-heading-row"><h3>My food log</h3><span className="sf-green-chip">{t.calories} kcal</span></div>
-      {meals.map((m,i)=><div className="sf-history-row" key={m.id||i}>
-        <span><UtensilsCrossed size={14}/><span><b>{m.name}</b><br/><small className="sf-muted">{m.type} · P {m.protein}g · C {m.carbs}g · F {m.fat}g</small></span></span>
-        <strong>{m.calories} kcal<button className="sf-icon-btn" aria-label={"Remove "+m.name}
-          onClick={()=>patch({meals:meals.filter((_,j)=>j!==i)})}><Trash2 size={13}/></button></strong>
+      <div className="sf-heading-row"><h3>My food log</h3><span className="sf-green-chip">{Math.round(t.calories)} kcal</span></div>
+      {meals.map((m,i)=><div className="mb-log-row" key={m.id||i}>
+        {m.id&&<MealPhoto identity={identity} mealId={m.id} name={m.name}/>}
+        <div className="mb-log-main"><b>{m.name}</b><small>{m.type} · P {m.protein}g · C {m.carbs}g · F {m.fat}g</small>{m.detail&&<small>{m.detail}</small>}</div>
+        <strong>{m.calories} kcal</strong>
+        <button className="sf-icon-btn" aria-label={"Remove "+m.name} onClick={()=>removeMeal(m)}><Trash2 size={13}/></button>
       </div>)}
       {meals.length===0&&<div className="sf-empty">No meals logged yet. Log a menu meal above or add your own below.</div>}
+      {meals.length>0&&<p className="mini-help">Tap the camera to add a photo to any meal. Photos stay on this device.</p>}
     </div>
-    <details className="card sf-add-meal">
-      <summary>Add your own meal <em>+ Add</em></summary>
-      <form onSubmit={addFood}>
-        <SelectField label="Meal type" value={food.type} onChange={v=>setFood(x=>({...x,type:v}))} options={MEAL_TYPES}/>
-        <FormField label="Food or dish" value={food.name} onChange={v=>setFood(x=>({...x,name:v}))} placeholder="Example: Vegetable rice bowl"/>
-        <div className="grid2">
-          {["calories","carbs","fat","protein"].map(k=><FormField key={k} label={k==="calories"?"Calories (kcal)":k[0].toUpperCase()+k.slice(1)+" (g)"}
-            type="number" min={0} step="0.1" value={food[k]} onChange={v=>setFood(x=>({...x,[k]:v}))} placeholder="0"/>)}
-        </div>
-        {foodError&&<div className="error" role="alert">{foodError}</div>}
-        <Button type="submit" block outline disabled={!food.name.trim()||food.calories===""||["carbs","fat","protein"].some(k=>food[k]==="")}><Plus size={15}/> Save meal manually</Button>
-      </form>
-      <p className="mini-help" style={{marginTop:10}}>Enter values from food labels or your own records. No AI estimation.</p>
-    </details>
+    <OwnMealPanel myMeals={data.myMeals||[]} onLog={logMeal} onSaveMyMeal={onSaveMyMeal} onDeleteMyMeal={onDeleteMyMeal}/>
   </div>;
 }
 
@@ -606,7 +586,9 @@ export default function App() {
         onOpenWater={()=>{setShowPlan(false);setDetailPage("water");window.scrollTo(0,0)}}
         onOpenWeight={()=>{setShowPlan(false);setDetailPage("weight");window.scrollTo(0,0)}}
         onOpenActivity={()=>{setShowPlan(false);setDetailPage("activity");window.scrollTo(0,0)}}/>:
-      tab==="track"?<TrackScreen data={data} date={date} onDate={setDate} updateDay={updateDay}/>:
+      tab==="track"?<TrackScreen data={data} date={date} onDate={setDate} updateDay={updateDay} identity={currentIdentity}
+        onSaveMyMeal={m=>setData(d=>({...d,myMeals:[m,...(d.myMeals||[])].slice(0,100)}))}
+        onDeleteMyMeal={id=>setData(d=>({...d,myMeals:(d.myMeals||[]).filter(x=>x.id!==id)}))}/>:
       tab==="fasting"?<FastingScreen data={data} now={now} onStart={startFasting} onFinish={finishFasting}
         onHoursChange={h=>setData(d=>({...d,profile:{...d.profile,fastingHours:h}}))} onBack={()=>openTab("plan")}/>:
       tab==="progress"?<ResultsView data={data} today={today} identity={currentIdentity}

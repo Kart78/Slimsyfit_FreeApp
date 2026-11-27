@@ -93,3 +93,36 @@ test("menu matches original dishes, has detail, and macros add up", () => {
   }
   assert.equal(logType("Snacks"), "Snack");
 });
+
+import { FOODS, getFood, itemsTotal, itemNutrition, perServing, scaleNutrition, searchFoods, itemLabel } from "../src/lib/foods.js";
+test("food list is well-formed and calories agree with macros", () => {
+  assert.ok(FOODS.length >= 90);
+  const ids = new Set();
+  for (const f of FOODS) {
+    assert.ok(!ids.has(f.id), "unique id " + f.id); ids.add(f.id);
+    assert.ok(f.servings.length >= 1 && f.servings.every(s => s.grams > 0 && s.label), f.name + " servings");
+    const { calories, protein, carbs, fat } = f.per100;
+    if (calories >= 50) assert.ok(Math.abs(protein * 4 + carbs * 4 + fat * 9 - calories) / calories < 0.15, f.name + " macros vs kcal");
+  }
+  for (const id of ["roti", "dal", "idli", "dosa", "paneer", "sambar", "chole", "rajma", "poha", "upma"]) assert.ok(getFood(id), "has Indian food " + id);
+});
+test("meal builder totals, quantities and recipe servings", () => {
+  // 2 eggs (2 × 50 g) = 155 kcal/100 g → 155 kcal
+  assert.deepEqual(itemNutrition({ foodId: "egg", servingIndex: 0, qty: 2 }), { calories: 155, protein: 12.6, carbs: 1.1, fat: 10.6 });
+  const t = itemsTotal([{ foodId: "egg", servingIndex: 0, qty: 2 }, { foodId: "bread-ww", servingIndex: 0, qty: 1 }]);
+  assert.equal(t.calories, 155 + 81); // 1 slice 32 g × 252/100 = 80.6 → 81
+  assert.deepEqual(perServing({ calories: 1000, protein: 40, carbs: 100, fat: 30 }, 4), { calories: 250, protein: 10, carbs: 25, fat: 7.5 });
+  assert.deepEqual(scaleNutrition({ calories: 250, protein: 10, carbs: 25, fat: 7.5 }, 1.5), { calories: 375, protein: 15, carbs: 37.5, fat: 11.3 });
+  assert.equal(itemNutrition({ foodId: "nope", qty: 1 }).calories, 0);
+  assert.equal(itemLabel({ foodId: "roti", servingIndex: 0, qty: 2 }), "2 × 1 roti Roti / chapati (whole wheat)");
+});
+test("food search matches names and common aliases", () => {
+  assert.equal(searchFoods("chapati")[0].id, "roti");
+  assert.equal(searchFoods("dahi")[0].id, "curd");
+  assert.ok(searchFoods("chicken").length >= 3);
+  assert.equal(searchFoods("").length, 0);
+});
+test("saved meals survive normalization", () => {
+  assert.deepEqual(normalizeData({}).myMeals, []);
+  assert.equal(normalizeData({ myMeals: [{ id: "a" }] }).myMeals.length, 1);
+});

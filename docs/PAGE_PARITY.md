@@ -25,6 +25,13 @@ The reference images supplied November 26, 2026 show the original mobile layout.
 - Original imagery, milestone artwork and activity animations are copied under `public/assets/slimsyfit`.
 - The FreeApp is independent. AI, Stripe, subscription checks and premium access gates are deliberately absent.
 
+## Add your own meal (no AI)
+
+- **Build from foods:** 98 built-in foods (incl. roti, dal, idli, dosa, paneer, sambar, chole, rajma, poha, upma) with per-100 g values and common serving sizes; quantity stepper; live total of kcal/protein/carbs/fat. Data in `src/lib/foods.js` (approximate; USDA FoodData Central + common Indian recipes).
+- **My meals / recipes:** save any built meal with a servings count; values are stored per serving; log 0.5–3 servings in one tap. Synced with the rest of the user's data (`myMeals`).
+- **Enter numbers:** the original manual form.
+- **Photo diary:** camera button on every food-log entry; photo is downscaled and stored only on the device (IndexedDB, `src/lib/photoStore.js`), never uploaded; deleted with the entry.
+
 ## Fixes in the parity audit (Nov 26, 2026)
 
 - Changing the weight unit in Settings now converts every recorded weight and the goal weights, instead of relabelling 80 kg as 80 lbs.

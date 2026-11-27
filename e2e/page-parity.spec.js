@@ -59,6 +59,7 @@ test("original-style Home, Hydration, Weight, Plan and Results pages remain func
  // Own-meal form is folded by default and still works when opened.
  await expect(page.getByLabel("Food or dish")).toBeHidden();
  await page.getByText("Add your own meal").click();
+ await page.getByRole("tab",{name:"Enter numbers"}).click();
  await page.getByLabel("Food or dish").fill("Lentil soup");
  for(const [l,v] of [["Calories (kcal)","300"],["Carbs (g)","40"],["Fat (g)","6"],["Protein (g)","18"]])await page.getByLabel(l).fill(v);
  await page.getByRole("button",{name:"Save meal manually"}).click();

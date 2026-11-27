@@ -8,7 +8,8 @@ export const defaultProfile = {
 export const createEmptyData = () => ({
   profile: { ...defaultProfile },
   days: {},
-  fasting: { activeStart: null, completed: [] }
+  fasting: { activeStart: null, completed: [] },
+  myMeals: []
 });
 export const localDay = (date = new Date()) => {
   const y = date.getFullYear();
@@ -29,7 +30,9 @@ export const normalizeData = data => ({
   fasting: {
     activeStart: data?.fasting?.activeStart || null,
     completed: Array.isArray(data?.fasting?.completed) ? data.fasting.completed : []
-  }
+  },
+  // Saved meals & recipes the user built ("My meals"); synced with the rest.
+  myMeals: Array.isArray(data?.myMeals) ? data.myMeals : []
 });
 export function loadLocal(identity = "guest") {
   try { return normalizeData(JSON.parse(localStorage.getItem(prefix + identity))); }
