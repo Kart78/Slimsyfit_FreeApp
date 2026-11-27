@@ -1,11 +1,14 @@
 // Deploy only to the dedicated FreeApp Supabase project:
-// supabase functions deploy delete-account --project-ref YOUR_NEW_FREEAPP_PROJECT
+// supabase functions deploy delete-account --project-ref rvplxwcoqdlpfchbhlkp
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const allowedOrigin = Deno.env.get("FREEAPP_ORIGIN") || "";
+// Comma-separated list; FREEAPP_ORIGIN overrides the default production origin.
+const allowedOrigins = (Deno.env.get("FREEAPP_ORIGIN") || "https://healthyfy-eta.vercel.app")
+  .split(",").map(s => s.trim()).filter(Boolean);
 serve(async req => {
   const origin=req.headers.get("origin")||"";
+  const allowedOrigin = allowedOrigins.includes(origin) ? origin : "";
   const cors={
     "Access-Control-Allow-Origin":allowedOrigin && origin===allowedOrigin ? origin : "null",
     "Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type",
